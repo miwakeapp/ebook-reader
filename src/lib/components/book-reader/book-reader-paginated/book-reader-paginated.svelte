@@ -605,6 +605,7 @@
   bind:this={scrollEl}
   style:color={fontColor}
   style:font-size="{fontSize}px"
+  style:font-kerning="normal"
   style:line-height={lineHeight}
   style:padding-top={!verticalMode && firstDimensionMargin
     ? `${firstDimensionMargin}px`

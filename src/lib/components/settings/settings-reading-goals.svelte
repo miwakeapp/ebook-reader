@@ -27,21 +27,25 @@
 
   interface Props {
     onspinner?: (value: boolean) => void;
+    ongoalschange?: (readingGoals: BooksDbReadingGoal[]) => void;
   }
 
-  let { onspinner }: Props = $props();
+  let { onspinner, ongoalschange }: Props = $props();
 
   const readingGoalFrequencies = [
     {
       id: ReadingGoalFrequency.DAILY,
-      label: 'Daily (1 Day)'
+      label: 'Daily'
     },
     {
       id: ReadingGoalFrequency.WEEKLY,
-      label: 'Weekly (7 Days)'
+      label: '7-day window'
     },
-    { id: ReadingGoalFrequency.MONTHLY, label: 'Monthly (30 Days)' }
+    { id: ReadingGoalFrequency.MONTHLY, label: '30-day window' }
   ];
+  const readingGoalFrequencyLabels = new Map(
+    readingGoalFrequencies.map(({ id, label }) => [id, label])
+  );
 
   let currentTimeGoal = $state(0);
   let currentCharacterGoal = $state(0);
@@ -51,7 +55,7 @@
   let readingGoals: BooksDbReadingGoal[] = $state([]);
   let sortedReadingGoals: BooksDbReadingGoal[] = $state([]);
   let historyIndex = $state(0);
-  const itemsPerPage = 1;
+  const itemsPerPage = 5;
 
   let saveDisabled = $derived(
     !!((currentTimeGoal || currentCharacterGoal) && !currentReadingGoalStartDate)
@@ -236,6 +240,7 @@
     historyIndex = 0;
 
     $readingGoal$ = await getCurrentReadingGoal(readingGoals);
+    ongoalschange?.(readingGoals);
   }
 </script>
 
@@ -287,7 +292,7 @@
           class="flex items-center justify-center hover:opacity-50"
           class:cursor-not-allowed={!readingGoals.length}
         >
-          <span class="mr-2">Reset</span>
+          <span class="mr-2">Delete goals</span>
           <Fa icon={faTrash} />
         </div>
       </button>
@@ -295,8 +300,8 @@
   </div>
   <hr class="border border-black" />
   <div class="grid grid-cols-1 gap-4 justify-between items-end mt-4 md:grid-cols-4">
-    <div class="flex flex-col">
-      Time Goal (Min)
+    <label class="flex flex-col">
+      Reading time goal (minutes)
       <input
         type="number"
         min="0"
@@ -305,9 +310,9 @@
         bind:value={currentTimeGoalInMin}
         onblur={(event) => handleReadingGoalChange(event, true)}
       />
-    </div>
-    <div class="flex flex-col">
-      Character Goal
+    </label>
+    <label class="flex flex-col">
+      Character goal
       <input
         type="number"
         min="0"
@@ -316,9 +321,9 @@
         bind:value={currentCharacterGoal}
         onblur={(event) => handleReadingGoalChange(event, false)}
       />
-    </div>
-    <div class="flex flex-col">
-      Frequency
+    </label>
+    <label class="flex flex-col">
+      Goal window
       <select
         class:cursor-not-allowed={!isInEditMode}
         disabled={!isInEditMode}
@@ -330,16 +335,16 @@
           </option>
         {/each}
       </select>
-    </div>
-    <div class="flex flex-col">
-      Start Date
+    </label>
+    <label class="flex flex-col">
+      Start date
       <input
         type="date"
         class:cursor-not-allowed={!isInEditMode}
         disabled={!isInEditMode}
         bind:value={currentReadingGoalStartDate}
       />
-    </div>
+    </label>
   </div>
   <details class="mt-6 cursor-pointer">
     <summary>Reading Goal History ({pluralize(readingGoals.length, 'Item')})</summary>
@@ -353,7 +358,7 @@
           <div>{dateRangeLabel}</div>
           <div>{secondsToMinutes(historyGoal.timeGoal)} min</div>
           <div>{historyGoal.characterGoal} characters</div>
-          <div>{historyGoal.goalFrequency}</div>
+          <div>{readingGoalFrequencyLabels.get(historyGoal.goalFrequency)}</div>
           <button
             onclick={() => deleteReadingGoals(historyGoal, dateRangeLabel)}
             title="Delete reading goal"
@@ -370,7 +375,7 @@
           )}
           <div class="my-2">
             {dateRangeLabel} / {secondsToMinutes(historyGoal.timeGoal)} min / {historyGoal.characterGoal}
-            characters / {historyGoal.goalFrequency}
+            characters / {readingGoalFrequencyLabels.get(historyGoal.goalFrequency)}
             <button
               onclick={() => deleteReadingGoals(historyGoal, dateRangeLabel)}
               title="Delete reading goal"

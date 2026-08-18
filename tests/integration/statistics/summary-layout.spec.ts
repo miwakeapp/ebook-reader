@@ -22,7 +22,7 @@ test('statistics summary headers stay sticky while the page scrolls', async ({ p
   await navigateToStatisticsSummary(page);
   const settings = await openStatisticsSettings(page);
   await settings.getByRole('button', { name: 'Set to all time for the selected books' }).click();
-  await settings.getByTitle('Close statistics settings').click();
+  await settings.getByTitle('Close view options').click();
   await expect(settings).toHaveCount(0, { timeout: SYNC_ASSERTION_TIMEOUT });
 
   const summary = page.getByRole('region', { name: 'Statistics summary' });

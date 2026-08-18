@@ -7,7 +7,7 @@
   import { showMessageDialog } from '$lib/components/message-dialog.svelte';
   import { syncState } from '$lib/data/sync/sync-store.svelte';
   import SyncButton from '$lib/components/settings/sync/sync-button.svelte';
-  import SyncSection from '$lib/components/settings/sync/sync-section.svelte';
+  import SettingsSection from '$lib/components/settings/settings-section.svelte';
   import { showForceResyncDialog } from '$lib/components/settings/sync/force-resync-dialog.svelte';
   import { forceFullResync } from '$lib/data/sync/sync-engine';
   import {
@@ -145,7 +145,7 @@
   ]);
 </script>
 
-<SyncSection title="Data management">
+<SettingsSection title="Data management">
   {#each items as item, i (item.title)}
     <div
       class="flex items-center justify-between gap-4 py-3"
@@ -164,4 +164,4 @@
       >
     </div>
   {/each}
-</SyncSection>
+</SettingsSection>

@@ -17,7 +17,7 @@
   import SyncButton from '$lib/components/settings/sync/sync-button.svelte';
   import SyncLastSyncedTime from '$lib/components/settings/sync/sync-last-synced-time.svelte';
   import SyncRow from '$lib/components/settings/sync/sync-row.svelte';
-  import SyncSection from '$lib/components/settings/sync/sync-section.svelte';
+  import SettingsSection from '$lib/components/settings/settings-section.svelte';
   import { showCustomOAuthDialog } from '$lib/components/settings/sync/custom-oauth-dialog.svelte';
   import { showSyncLeaveDialog } from '$lib/components/settings/sync/sync-leave-dialog.svelte';
 
@@ -204,7 +204,7 @@
   }
 </script>
 
-<SyncSection
+<SettingsSection
   title="Sync location"
   description="Pick one place to mirror your library, bookmarks, and reading data so it follows you across devices."
 >
@@ -442,4 +442,4 @@
       {/snippet}
     </SyncRow>
   {/if}
-</SyncSection>
+</SettingsSection>

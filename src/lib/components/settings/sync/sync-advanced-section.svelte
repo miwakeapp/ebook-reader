@@ -12,13 +12,17 @@
   import { ImportHTMLFixMode } from '$lib/data/import-html-fix-mode';
   import { syncState } from '$lib/data/sync/sync-store.svelte';
   import { storage } from '$lib/data/window/navigator/storage';
-  import Fa from 'svelte-fa';
-  import { faChevronRight } from '@fortawesome/free-solid-svg-icons';
-  import SyncRadioGroup from '$lib/components/settings/sync/sync-radio-group.svelte';
+  import SettingsAdvanced from '$lib/components/settings/settings-advanced.svelte';
+  import SettingsRadioGroup from '$lib/components/settings/settings-radio-group.svelte';
   import { describeSyncLocation } from '$lib/components/settings/sync/sync-utils';
 
   let hasLocation = $derived(syncState.location !== null);
   let locationLabel = $derived(describeSyncLocation(syncState.location) || 'your sync location');
+  let advancedDescription = $derived(
+    `Fine-tune how syncing works. Defaults are safe for most users.${
+      hasLocation ? '' : ' These settings take effect once you connect a sync location above.'
+    }`
+  );
 
   let advancedOpen = $state(false);
   let storagePersisted = $state<boolean | null>(null);
@@ -115,42 +119,28 @@
   ];
 </script>
 
-<details class="pb-8" bind:open={advancedOpen}>
-  <summary class="mb-2 flex cursor-pointer items-center gap-2 border-b border-black pb-1">
-    <Fa icon={faChevronRight} class="chevron text-sm text-gray-500" />
-    <h2 class="text-xl font-medium capitalize">Advanced</h2>
-  </summary>
-  <p class="mt-2 mb-4 text-sm text-gray-600">
-    Fine-tune how syncing works. Defaults are safe for most users.
-    {#if !hasLocation}
-      These settings take effect once you connect a sync location above.
-    {/if}
-  </p>
-
+<SettingsAdvanced title="Advanced" description={advancedDescription} bind:open={advancedOpen}>
   <div class="space-y-5">
-    <SyncRadioGroup
+    <SettingsRadioGroup
       id="sync-direction"
-      heading="Sync direction"
+      legend="Sync direction"
       name="sync-direction"
       options={directionOptions}
-      selected={$autoReplication$}
-      onchange={(value) => ($autoReplication$ = value)}
+      bind:value={$autoReplication$}
     />
 
-    <SyncRadioGroup
-      heading="How to combine reading statistics"
+    <SettingsRadioGroup
+      legend="How to combine reading statistics"
       name="sync-statistics-merge"
       options={statisticsMergeOptions}
-      selected={$statisticsMergeMode$}
-      onchange={(value) => ($statisticsMergeMode$ = value)}
+      bind:value={$statisticsMergeMode$}
     />
 
-    <SyncRadioGroup
-      heading="How to combine reading goals"
+    <SettingsRadioGroup
+      legend="How to combine reading goals"
       name="sync-goals-merge"
       options={goalsMergeOptions}
-      selected={$readingGoalsMergeMode$}
-      onchange={(value) => ($readingGoalsMergeMode$ = value)}
+      bind:value={$readingGoalsMergeMode$}
     />
 
     <div>
@@ -170,12 +160,11 @@
     </div>
 
     <div class="space-y-2">
-      <SyncRadioGroup
-        heading="EPUB import fixes"
+      <SettingsRadioGroup
+        legend="EPUB import fixes"
         name="sync-import-html-fix"
         options={importHTMLFixOptions}
-        selected={$importHTMLFixMode$}
-        onchange={(value) => ($importHTMLFixMode$ = value)}
+        bind:value={$importHTMLFixMode$}
       />
 
       {#if $importHTMLFixMode$ !== ImportHTMLFixMode.OFF}
@@ -210,16 +199,4 @@
       </div>
     </div>
   </div>
-</details>
-
-<style>
-  summary::marker {
-    content: '';
-  }
-  :global(.chevron) {
-    transition: transform 150ms ease;
-  }
-  details[open] > summary :global(.chevron) {
-    transform: rotate(90deg);
-  }
-</style>
+</SettingsAdvanced>

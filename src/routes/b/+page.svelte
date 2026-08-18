@@ -11,7 +11,6 @@
   import {
     autoBookmark$,
     autoBookmarkTime$,
-    autoPositionOnResize$,
     avoidPageBreak$,
     database,
     enableTapEdgeToFlip$,
@@ -53,7 +52,6 @@
     pauseTrackerOnCustomPointChange$,
     showCharacterCounter$,
     showPercentage$,
-    enableVerticalFontKerning$,
     enableFontVPAL$,
     verticalTextOrientation$
   } from '$lib/data/store';
@@ -177,11 +175,7 @@
 
   const readerController = new BookReaderController();
 
-  let fontFeatureSettings = $derived(
-    [$enableVerticalFontKerning$ && '"vkrn"', $enableFontVPAL$ && '"vpal"']
-      .filter((f) => !!f && $verticalMode$)
-      .join(', ')
-  );
+  let fontFeatureSettings = $derived($enableFontVPAL$ && $verticalMode$ ? '"vpal"' : '');
 
   let bookTitle = $derived(browser ? (page.url.searchParams.get('t') ?? '') : '');
   let hasLegacyBookId = $derived(browser && page.url.searchParams.has('id'));
@@ -589,7 +583,11 @@
   });
 
   function handleUnload(event: BeforeUnloadEvent) {
-    if ($confirmClose$ && (isSyncingOrPending() || storedExploredCharacter !== exploredCharCount)) {
+    if (
+      $confirmClose$ &&
+      $manualBookmark$ &&
+      (isSyncingOrPending() || storedExploredCharacter !== exploredCharCount)
+    ) {
       event.preventDefault();
 
       return (event.returnValue = 'Are you sure you want to exit?');
@@ -974,7 +972,7 @@
         readerController.stopAutoScrollIfAvailable();
         pauseTrackerFor('leaving-reader');
 
-        if ($confirmClose$ && storedExploredCharacter !== exploredCharCount) {
+        if ($confirmClose$ && $manualBookmark$ && storedExploredCharacter !== exploredCharCount) {
           const confirmed = await showConfirmDialog({
             title: 'Confirm exit',
             message: 'Your current location was not bookmarked. Continue leaving?',
@@ -1403,7 +1401,6 @@
     viewMode={$viewMode$}
     secondDimensionMaxValue={$secondDimensionMaxValue$}
     {firstDimensionMargin}
-    autoPositionOnResize={$autoPositionOnResize$}
     avoidPageBreak={$avoidPageBreak$}
     pageColumns={$pageColumns$}
     autoBookmark={$autoBookmark$}

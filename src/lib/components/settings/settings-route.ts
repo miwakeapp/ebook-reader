@@ -2,11 +2,12 @@ import type { RouteId } from '$app/types';
 
 export type SettingsRoute = Extract<
   RouteId,
-  '/settings/reader' | '/settings/sync' | '/settings/statistics'
+  '/settings/appearance' | '/settings/reading' | '/settings/sync' | '/settings/tracking'
 >;
 
 export const settingsRoutes: SettingsRoute[] = [
-  '/settings/reader',
-  '/settings/sync',
-  '/settings/statistics'
+  '/settings/appearance',
+  '/settings/reading',
+  '/settings/tracking',
+  '/settings/sync'
 ];

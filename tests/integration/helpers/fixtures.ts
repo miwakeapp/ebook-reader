@@ -460,7 +460,7 @@ async function showAllStatistics(page: Page) {
   await navigateToStatisticsSummary(page);
   const settings = await openStatisticsSettings(page);
   await settings.getByRole('button', { name: 'Set to all time for the selected books' }).click();
-  await settings.getByTitle('Close statistics settings').click();
+  await settings.getByTitle('Close view options').click();
   await expect(settings).toHaveCount(0, { timeout: SYNC_ASSERTION_TIMEOUT });
 }
 
@@ -470,7 +470,7 @@ export async function openStatisticsSettings(page: Page) {
     return settings;
   }
 
-  await page.getByRole('button', { name: 'Statistics Settings', exact: true }).click();
+  await page.getByRole('button', { name: 'View options', exact: true }).click();
   await expect(settings).toBeVisible({ timeout: SYNC_ASSERTION_TIMEOUT });
   return settings;
 }

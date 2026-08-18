@@ -49,7 +49,6 @@
     furiganaStyle: FuriganaStyle;
     secondDimensionMaxValue: number;
     firstDimensionMargin: number;
-    autoPositionOnResize: boolean;
     autoBookmark: boolean;
     autoBookmarkTime: number;
     loadingState: boolean;
@@ -91,7 +90,6 @@
     furiganaStyle,
     secondDimensionMaxValue,
     firstDimensionMargin,
-    autoPositionOnResize,
     autoBookmark,
     autoBookmarkTime,
     loadingState,
@@ -263,12 +261,6 @@
 
   $effect(() => {
     const dimension = verticalMode ? height : width;
-
-    if (!autoPositionOnResize) {
-      lastAutoPositionDimension = dimension;
-      clearScheduledAutoPosition();
-      return;
-    }
 
     if (lastAutoPositionDimension === undefined) {
       lastAutoPositionDimension = dimension;
@@ -645,6 +637,7 @@
   bind:this={contentEl}
   style:color={fontColor}
   style:font-size="{fontSize}px"
+  style:font-kerning="normal"
   style:line-height={lineHeight}
   style:max-width={!verticalMode && secondDimensionMaxValue
     ? `${secondDimensionMaxValue}px`
@@ -739,14 +732,7 @@
   </div>
 {/if}
 
-<svelte:window
-  onscroll={onScroll}
-  onresize={() => {
-    if (autoPositionOnResize) {
-      isResizeScroll = true;
-    }
-  }}
-/>
+<svelte:window onscroll={onScroll} onresize={() => (isResizeScroll = true)} />
 
 <style>
   @import '../styles.css';

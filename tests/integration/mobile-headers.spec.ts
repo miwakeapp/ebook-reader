@@ -34,8 +34,13 @@ test('mobile section headers keep labeled controls visible and expose overflow a
 
   const settingsToolbar = page.getByRole('toolbar', { name: 'Settings controls' });
   const settingsActions = settingsToolbar.locator('[data-mobile-actions]');
-  await expectVisibleControls(settingsActions, ['Reader', 'Sync', 'Statistics']);
-  await expectControlsToHaveEqualWidths(settingsActions, ['Reader', 'Sync', 'Statistics']);
+  await expectVisibleControls(settingsActions, ['Appearance', 'Reading', 'Tracking', 'Sync']);
+  await expectControlsToHaveEqualWidths(settingsActions, [
+    'Appearance',
+    'Reading',
+    'Tracking',
+    'Sync'
+  ]);
   await expectToolbarToFitViewport(settingsActions, page);
 
   navigation = page.getByRole('navigation', { name: 'Primary navigation' });
@@ -44,10 +49,11 @@ test('mobile section headers keep labeled controls visible and expose overflow a
 
   const statisticsToolbar = page.getByRole('toolbar', { name: 'Statistics controls' });
   const statisticsActions = statisticsToolbar.locator('[data-mobile-actions]');
-  await expectVisibleControls(statisticsActions, ['Summary', 'Heatmap', 'Filter', 'More']);
+  await expectVisibleControls(statisticsActions, ['Summary', 'Heatmap', 'Goals', 'Filter', 'More']);
   await expectControlsToHaveEqualWidths(statisticsActions, [
     'Summary',
     'Heatmap',
+    'Goals',
     'Filter',
     'More'
   ]);
@@ -56,7 +62,7 @@ test('mobile section headers keep labeled controls visible and expose overflow a
   await visibleControl(statisticsToolbar, 'More').click();
   await expect(visibleControl(statisticsToolbar, 'Copy Reading Time')).toBeVisible();
   await expect(visibleControl(statisticsToolbar, 'Copy Characters Read')).toBeVisible();
-  await expect(visibleControl(statisticsToolbar, 'Statistics Settings')).toBeVisible();
+  await expect(visibleControl(statisticsToolbar, 'View options')).toBeVisible();
   await expectToolbarToFitViewport(statisticsActions, page);
 });
 

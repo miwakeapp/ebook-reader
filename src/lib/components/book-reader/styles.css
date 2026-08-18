@@ -166,18 +166,6 @@
   }
 }
 
-.book-content--furigana-style-toggle {
-  :global(ruby) {
-    @media (hover: hover) {
-      &:not(.reveal-rt):hover {
-        :global(rt) {
-          visibility: hidden;
-        }
-      }
-    }
-  }
-}
-
 /* Use :where() so EPUB class-specific margins (e.g. for section breaks) aren't
    overridden. The :global() bypasses Svelte scoping so :where() can actually
    zero out the specificity of the parent selectors. See

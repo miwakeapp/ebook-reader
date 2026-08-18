@@ -5,6 +5,7 @@
     faCopy,
     faEllipsis,
     faFilter,
+    faFlag,
     faMap,
     faSliders
   } from '@fortawesome/free-solid-svg-icons';
@@ -23,9 +24,10 @@
     titleFilterEnabled: boolean;
     oncopydata: (dataKey: keyof BookStatistic) => void;
     onopenfilter: () => void;
-    onopensettings: () => void;
+    onopenviewoptions: () => void;
     summaryHref: ResolvedPathname;
     heatmapHref: ResolvedPathname;
+    goalsHref: ResolvedPathname;
   }
 
   let {
@@ -33,9 +35,10 @@
     titleFilterEnabled,
     oncopydata,
     onopenfilter,
-    onopensettings,
+    onopenviewoptions,
     summaryHref,
-    heatmapHref
+    heatmapHref,
+    goalsHref
   }: Props = $props();
 
   const copyStatisticsDataItems: StatisticsDataSource[] = [
@@ -47,18 +50,19 @@
     onclick: () => oncopydata(key)
   }));
 
-  const settingsAction: HeaderAction = {
+  const viewOptionsAction: HeaderAction = {
     faIcon: faSliders,
-    label: 'Statistics Settings',
-    title: 'Open statistics settings',
-    onclick: () => onopensettings()
+    label: 'View options',
+    title: 'Open view options',
+    onclick: () => onopenviewoptions()
   };
 
   let summarySelected = $derived(activeView === 'summary');
   let heatmapSelected = $derived(activeView === 'heatmap');
+  let goalsSelected = $derived(activeView === 'goals');
   const mobileMenuItems = [
     ...copyMenuItems.map(({ label, onclick }) => ({ label: `Copy ${label}`, onclick })),
-    settingsAction
+    viewOptionsAction
   ];
 </script>
 
@@ -85,6 +89,14 @@
           title={heatmapSelected ? undefined : 'Switch to Heatmap tab'}
           href={heatmapHref}
         />
+        <HeaderButton
+          faIcon={faFlag}
+          label="Goals"
+          selected={goalsSelected}
+          variant="tab"
+          title={goalsSelected ? undefined : 'Switch to Goals tab'}
+          href={goalsHref}
+        />
         <div class="hidden md:block {headerDividerClasses}"></div>
         <HeaderButton
           faIcon={faFilter}
@@ -98,7 +110,7 @@
           }}
         />
         <div class="hidden md:contents">
-          <HeaderButton {...settingsAction} />
+          <HeaderButton {...viewOptionsAction} />
         </div>
         <div class="contents md:hidden">
           <HeaderMenuButton

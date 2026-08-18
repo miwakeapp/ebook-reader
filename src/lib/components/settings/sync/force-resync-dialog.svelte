@@ -35,7 +35,7 @@
 <script lang="ts">
   import DialogButton from '$lib/components/dialog/dialog-button.svelte';
   import DialogContentShell from '$lib/components/dialog/dialog-content-shell.svelte';
-  import SyncRadioGroup from '$lib/components/settings/sync/sync-radio-group.svelte';
+  import SettingsRadioGroup from '$lib/components/settings/settings-radio-group.svelte';
   import { describeSyncLocation } from '$lib/components/settings/sync/sync-utils';
 
   interface Props {
@@ -82,12 +82,11 @@
   description={`Walks every book, bookmark, reading statistic, and reading goal in your library to check for differences between ${locationLabel} and this device.`}
 >
   <div class="space-y-2">
-    <SyncRadioGroup
-      heading="Direction"
+    <SettingsRadioGroup
+      legend="Direction"
       name="force-resync-direction"
       {options}
-      selected={direction}
-      onchange={(value) => (direction = value)}
+      bind:value={direction}
     />
     <p class="text-xs text-gray-600">
       Reading statistics and reading goals also respect the merge-mode settings in Advanced, which

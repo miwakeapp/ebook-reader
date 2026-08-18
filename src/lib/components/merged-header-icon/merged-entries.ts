@@ -12,9 +12,9 @@ export const mergeEntries = {
   MANAGE: { routeId: '/manage', label: 'Manager', icon: faSignOutAlt, title: 'Go to Book Manager' },
   SETTINGS: {
     routeId: '/settings',
-    label: 'Reader Settings',
+    label: 'Settings',
     icon: faCog,
-    title: 'Go to Reader Settings'
+    title: 'Go to Settings'
   },
   STATISTICS: {
     routeId: '/statistics',

@@ -17,6 +17,17 @@ test('home route opens the manager when there is no last-opened book', async ({ 
   await expect(page).toHaveURL('/manage');
 });
 
+test('settings entry points and legacy routes open the settings sections', async ({ page }) => {
+  await page.goto('/settings');
+  await expect(page).toHaveURL('/settings/appearance');
+
+  await page.goto('/settings/reader');
+  await expect(page).toHaveURL('/settings/appearance');
+
+  await page.goto('/settings/statistics');
+  await expect(page).toHaveURL('/settings/tracking');
+});
+
 test('home route and Book tab open the last-opened book', async ({ page }) => {
   const bookURL = `/b?${new URLSearchParams({ t: fixtureTitle(PLAIN_TEXT_BOOK) })}`;
 
@@ -28,7 +39,7 @@ test('home route and Book tab open the last-opened book', async ({ page }) => {
   await expect(page).toHaveURL(bookURL);
   await expectBookReaderText(page, PLAIN_TEXT_BOOK);
 
-  await page.goto('/settings/reader');
+  await page.goto('/settings/appearance');
   await page.getByRole('link', { name: 'Book', exact: true }).click();
   await expect(page).toHaveURL(bookURL);
   await expectBookReaderText(page, PLAIN_TEXT_BOOK);
@@ -70,18 +81,22 @@ test('route-changing controls expose their destinations as links', async ({ page
     statisticsURL
   );
 
-  await page.goto('/settings/reader');
-  await expect(page.getByRole('link', { name: 'Reader', exact: true })).toHaveAttribute(
+  await page.goto('/settings/appearance');
+  await expect(page.getByRole('link', { name: 'Appearance', exact: true })).toHaveAttribute(
     'href',
-    '/settings/reader'
+    '/settings/appearance'
+  );
+  await expect(page.getByRole('link', { name: 'Reading', exact: true })).toHaveAttribute(
+    'href',
+    '/settings/reading'
   );
   await expect(page.getByRole('link', { name: 'Sync', exact: true })).toHaveAttribute(
     'href',
     '/settings/sync'
   );
-  await expect(page.getByRole('link', { name: 'Statistics', exact: true }).first()).toHaveAttribute(
+  await expect(page.getByRole('link', { name: 'Tracking', exact: true })).toHaveAttribute(
     'href',
-    '/settings/statistics'
+    '/settings/tracking'
   );
 
   await page.goto('/statistics?view=summary');
@@ -92,6 +107,10 @@ test('route-changing controls expose their destinations as links', async ({ page
   await expect(page.getByRole('link', { name: 'Heatmap', exact: true })).toHaveAttribute(
     'href',
     '/statistics?view=heatmap'
+  );
+  await expect(page.getByRole('link', { name: 'Goals', exact: true })).toHaveAttribute(
+    'href',
+    '/statistics?view=goals'
   );
 });
 
@@ -163,8 +182,10 @@ test('browser Back honors a canceled reader exit', async ({ page }) => {
   await expect(page).toHaveURL(bookURL);
 });
 
-test('browser Back saves reader state and preserves Forward history', async ({ page }) => {
-  const { bookURL, progressAfterMove } = await prepareReaderWithUnsavedProgress(page);
+test('browser Back discards unsaved reader state and preserves Forward history', async ({
+  page
+}) => {
+  const { bookURL, initialProgress } = await prepareReaderWithUnsavedProgress(page);
   await page.evaluate(() => history.back());
   const dialog = readerExitDialog(page);
   await expect(dialog).toBeVisible();
@@ -174,7 +195,7 @@ test('browser Back saves reader state and preserves Forward history', async ({ p
   await page.goForward();
   await expect(page).toHaveURL(bookURL);
   await expectBookReaderText(page, LONG_BOOK);
-  await expect(page.locator('#miwake-page-footer span').nth(1)).toHaveText(progressAfterMove);
+  await expect(page.locator('#miwake-page-footer span').nth(1)).toHaveText(initialProgress);
 });
 
 async function prepareReaderWithUnsavedProgress(page: Page) {
@@ -183,6 +204,7 @@ async function prepareReaderWithUnsavedProgress(page: Page) {
   await useReaderSettings(page, {
     autoBookmark: 'Off',
     closeConfirmation: 'On',
+    savePositionOnExit: 'Off',
     viewMode: 'Paginated',
     writingMode: 'Horizontal'
   });
@@ -195,7 +217,7 @@ async function prepareReaderWithUnsavedProgress(page: Page) {
   await page.keyboard.press('d');
   await expect.poll(() => progress.innerText()).not.toBe(initialProgress);
 
-  return { bookURL, progressAfterMove: await progress.innerText() };
+  return { bookURL, initialProgress };
 }
 
 function readerExitDialog(page: Page) {

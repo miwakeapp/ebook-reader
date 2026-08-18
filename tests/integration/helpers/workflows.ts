@@ -6,16 +6,17 @@ import {
   type SyncRootOptions
 } from './harness.ts';
 import {
-  navigateToSettingsReader,
-  navigateToSettingsStatistics,
-  navigateToSettingsSync
+  navigateToSettingsAppearance,
+  navigateToSettingsReading,
+  navigateToSettingsSync,
+  navigateToSettingsTracking,
+  navigateToStatisticsGoals
 } from './navigation.ts';
 import { expectBooksInSyncRoot, importBookFixtures, type LibraryBookFixture } from './fixtures.ts';
 
 interface ReaderSettings {
   autoBookmark?: string;
   autoBookmarkTime?: string;
-  autoPositionOnResize?: string;
   blurImages?: string;
   closeConfirmation?: string;
   customReadingPoint?: string;
@@ -26,9 +27,9 @@ interface ReaderSettings {
   readerMaxWidth?: string;
   showFooterChapterCharacters?: string;
   showFooterChapterPercentage?: string;
+  savePositionOnExit?: string;
   tapToFlip?: string;
   theme?: string;
-  verticalFontKerning?: string;
   verticalTextOrientation?: string;
   viewMode?: string;
   writingMode?: string;
@@ -98,113 +99,216 @@ export async function setSyncDirection(page: Page, direction: 'Up only' | 'Down 
 }
 
 export async function useReaderSettings(page: Page, settings: ReaderSettings) {
-  await navigateToSettingsReader(page);
+  const readingSettingsRequested = [
+    settings.autoBookmark,
+    settings.autoBookmarkTime,
+    settings.closeConfirmation,
+    settings.customReadingPoint,
+    settings.readerMaxWidth,
+    settings.savePositionOnExit,
+    settings.showFooterChapterCharacters,
+    settings.showFooterChapterPercentage,
+    settings.tapToFlip,
+    settings.viewMode
+  ].some((value) => value !== undefined);
 
-  if (settings.viewMode) {
-    await selectReaderSetting(page, /View mode/i, settings.viewMode);
+  if (readingSettingsRequested) {
+    await navigateToSettingsReading(page);
+
+    if (settings.viewMode) {
+      await selectSettingsRadio(page, 'Reading flow', mapReadingFlow(settings.viewMode));
+    }
+    if (settings.readerMaxWidth) {
+      await selectSettingsRadio(page, 'Maximum line length', 'Custom');
+      await fillSettingsNumber(page, 'Custom maximum', settings.readerMaxWidth);
+    }
+    if (settings.tapToFlip) {
+      await setSettingsSwitch(
+        page,
+        'Tap page edges to turn pages',
+        settingValueIsOn(settings.tapToFlip)
+      );
+    }
+    if (settings.autoBookmark) {
+      await setSettingsSwitch(
+        page,
+        'Save my position while reading',
+        settingValueIsOn(settings.autoBookmark)
+      );
+    }
+    if (settings.autoBookmarkTime) {
+      await fillSettingsNumber(page, 'Save after', settings.autoBookmarkTime);
+    }
+    if (settings.savePositionOnExit) {
+      await setSettingsSwitch(
+        page,
+        'Save my position when leaving',
+        settingValueIsOn(settings.savePositionOnExit)
+      );
+    }
+    if (settings.closeConfirmation) {
+      await setSettingsSwitch(
+        page,
+        'Warn before leaving with unsaved progress',
+        settingValueIsOn(settings.closeConfirmation)
+      );
+    }
+    if (settings.showFooterChapterCharacters) {
+      await setProgressFooterField(page, 2, settingValueIsOn(settings.showFooterChapterCharacters));
+    }
+    if (settings.showFooterChapterPercentage) {
+      await setProgressFooterField(page, 3, settingValueIsOn(settings.showFooterChapterPercentage));
+    }
+    if (settings.customReadingPoint) {
+      await setSettingsSwitch(
+        page,
+        'Use a fixed reading marker',
+        settingValueIsOn(settings.customReadingPoint)
+      );
+    }
   }
-  if (settings.theme) {
-    await page
-      .locator('section')
-      .filter({
-        has: page.getByRole('heading', { name: /Theme/i })
-      })
-      .getByTitle(settings.theme)
-      .click();
-  }
-  if (settings.fontSize) {
-    await fillReaderNumberSetting(page, /^Font size$/i, settings.fontSize);
-  }
-  if (settings.lineHeight) {
-    await fillReaderNumberSetting(page, /^Line Height$/i, settings.lineHeight);
-  }
-  if (settings.writingMode) {
-    await selectReaderSetting(page, /Writing mode/i, settings.writingMode);
-  }
-  if (settings.verticalFontKerning) {
-    await selectReaderSetting(page, /^Enable Font Kerning$/i, settings.verticalFontKerning);
-  }
-  if (settings.fontVPAL) {
-    await selectReaderSetting(page, /^Enable VPAL$/i, settings.fontVPAL);
-  }
-  if (settings.verticalTextOrientation) {
-    await selectReaderSetting(page, /^Text Orientation$/i, settings.verticalTextOrientation);
-  }
-  if (settings.furigana) {
-    await selectReaderSetting(page, /Furigana/i, settings.furigana);
-  }
-  if (settings.blurImages) {
-    await selectReaderSetting(page, /^Blur images$/i, settings.blurImages);
-  }
-  if (settings.readerMaxWidth) {
-    await fillReaderNumberSetting(page, /^Reader Max width$/i, settings.readerMaxWidth);
-  }
-  if (settings.showFooterChapterCharacters) {
-    await selectReaderSetting(
-      page,
-      /Show Footer Chapter Characters/i,
-      settings.showFooterChapterCharacters
-    );
-  }
-  if (settings.showFooterChapterPercentage) {
-    await selectReaderSetting(
-      page,
-      /Show Footer Chapter Percentage/i,
-      settings.showFooterChapterPercentage
-    );
-  }
-  if (settings.tapToFlip) {
-    await selectReaderSetting(page, /Tap to Flip/i, settings.tapToFlip);
-  }
-  if (settings.autoBookmark) {
-    await selectReaderSetting(page, /^Auto Bookmark$/i, settings.autoBookmark);
-  }
-  if (settings.autoBookmarkTime) {
-    await fillReaderNumberSetting(page, /^Auto Bookmark Time$/i, settings.autoBookmarkTime);
-  }
-  if (settings.autoPositionOnResize) {
-    await selectReaderSetting(page, /^Auto position on resize$/i, settings.autoPositionOnResize);
-  }
-  if (settings.closeConfirmation) {
-    await selectReaderSetting(page, /^Close Confirmation$/i, settings.closeConfirmation);
-  }
-  if (settings.customReadingPoint) {
-    await selectReaderSetting(page, /^Custom Reading Point$/i, settings.customReadingPoint);
+
+  const appearanceSettingsRequested = [
+    settings.blurImages,
+    settings.fontSize,
+    settings.fontVPAL,
+    settings.furigana,
+    settings.lineHeight,
+    settings.theme,
+    settings.verticalTextOrientation,
+    settings.writingMode
+  ].some((value) => value !== undefined);
+
+  if (appearanceSettingsRequested) {
+    await navigateToSettingsAppearance(page);
+
+    if (settings.writingMode) {
+      await selectSettingsRadio(page, 'Text direction', settings.writingMode);
+    }
+    if (settings.theme) {
+      await page
+        .getByRole('button', { name: `${themeDisplayName(settings.theme)} reading colors` })
+        .click();
+    }
+    if (settings.fontSize) {
+      await fillSettingsNumber(page, 'Text size', settings.fontSize);
+    }
+    if (settings.lineHeight) {
+      await fillSettingsNumber(page, 'Line height', settings.lineHeight);
+    }
+    if (settings.furigana) {
+      await selectSettingsRadio(page, 'Furigana display', mapFuriganaDisplay(settings.furigana));
+    }
+    if (settings.blurImages) {
+      await selectSettingsRadio(
+        page,
+        'Image spoiler protection',
+        mapImageSpoilerProtection(settings.blurImages)
+      );
+    }
+    if (settings.fontVPAL || settings.verticalTextOrientation) {
+      await openSettingsAdvanced(page, 'Advanced typography');
+    }
+    if (settings.fontVPAL) {
+      await selectSettingsRadio(
+        page,
+        'Vertical character spacing',
+        settingValueIsOn(settings.fontVPAL) ? 'Proportional' : 'Standard'
+      );
+    }
+    if (settings.verticalTextOrientation) {
+      await selectSettingsRadio(
+        page,
+        'Latin letters and numbers',
+        settings.verticalTextOrientation === 'Upright' ? 'Upright' : 'Mixed'
+      );
+    }
   }
 }
 
-export async function enableStatistics(page: Page, enabledHeading = 'Tracker Auto Pause') {
-  await navigateToSettingsStatistics(page);
-  const enableStatisticsSection = page.locator('section').filter({
-    has: page.getByRole('heading', { name: 'Enable Statistics' })
-  });
-
-  await enableStatisticsSection.getByRole('button', { name: 'On', exact: true }).click();
-  await expect(page.getByRole('heading', { name: enabledHeading })).toBeVisible({
-    timeout: SYNC_ASSERTION_TIMEOUT
-  });
+export async function enableStatistics(page: Page) {
+  await navigateToSettingsTracking(page);
+  const trackingSwitch = page.getByRole('switch', { name: 'Track reading activity' });
+  if (!(await trackingSwitch.isChecked())) {
+    await trackingSwitch.locator('xpath=ancestor::label[1]').click();
+  }
+  await expect(trackingSwitch).toBeChecked({ timeout: SYNC_ASSERTION_TIMEOUT });
 }
 
-async function selectReaderSetting(page: Page, sectionName: RegExp, optionName: string) {
-  await page
-    .locator('section')
-    .filter({
-      has: page.getByRole('heading', { name: sectionName })
-    })
-    .getByRole('button', { name: optionName })
-    .click();
-}
-
-async function fillReaderNumberSetting(page: Page, sectionName: RegExp, value: string) {
+async function selectSettingsRadio(page: Page, groupName: string, optionName: string) {
   const input = page
-    .locator('section')
-    .filter({
-      has: page.getByRole('heading', { name: sectionName })
-    })
-    .getByRole('spinbutton');
+    .getByRole('group', { name: groupName, exact: true })
+    .getByLabel(optionName, { exact: false });
+  if (!(await input.isChecked())) {
+    await input.locator('xpath=ancestor::label[1]').click();
+  }
+  await expect(input).toBeChecked();
+}
 
+async function fillSettingsNumber(page: Page, label: string, value: string) {
+  const input = page.getByLabel(label, { exact: false });
   await input.fill(value);
   await input.blur();
+}
+
+async function setSettingsSwitch(page: Page, label: string, checked: boolean) {
+  const input = page.getByRole('switch', { name: label, exact: true });
+  if ((await input.isChecked()) !== checked) {
+    await input.locator('xpath=ancestor::label[1]').click();
+  }
+  await expect(input).toBeChecked({ checked });
+}
+
+async function setProgressFooterField(page: Page, index: number, checked: boolean) {
+  const progressFooter = page.locator('section').filter({
+    has: page.getByRole('heading', { name: 'Progress footer', exact: true })
+  });
+  await progressFooter.getByRole('checkbox').nth(index).setChecked(checked);
+}
+
+async function openSettingsAdvanced(page: Page, title: string) {
+  const details = page.locator('details').filter({
+    has: page.getByRole('heading', { name: title, exact: true })
+  });
+  if ((await details.getAttribute('open')) === null) {
+    await details.locator('summary').click();
+  }
+}
+
+function settingValueIsOn(value: string) {
+  return value.toLowerCase() === 'on';
+}
+
+function mapReadingFlow(value: string) {
+  return value === 'Paginated' ? 'Pages' : value === 'Continuous' ? 'Scroll' : value;
+}
+
+function mapFuriganaDisplay(value: string) {
+  return (
+    {
+      Default: 'As published',
+      Dim: 'Dimmed',
+      Toggle: 'Reveal on demand',
+      Hide: 'Hidden'
+    }[value] ?? value
+  );
+}
+
+function mapImageSpoilerProtection(value: string) {
+  return (
+    {
+      Off: 'Show images',
+      'After ToC': 'Blur story illustrations',
+      All: 'Blur all illustrations'
+    }[value] ?? value
+  );
+}
+
+function themeDisplayName(themeId: string) {
+  return themeId
+    .replace(/-theme$/, '')
+    .replaceAll('-', ' ')
+    .replace(/(^|\s)\S/g, (character) => character.toUpperCase());
 }
 
 export async function setReadingGoal(
@@ -378,16 +482,12 @@ export async function waitForSuccessfulSync(page: Page) {
 }
 
 async function openReadingGoals(page: Page) {
-  await navigateToSettingsStatistics(page);
+  await navigateToStatisticsGoals(page);
   const readingGoalsHeading = page.getByRole('heading', { name: 'Reading Goals' });
-  if ((await readingGoalsHeading.count()) === 0) {
-    await enableStatistics(page, 'Reading Goals');
-  }
-
   await expect(readingGoalsHeading).toBeVisible({ timeout: SYNC_ASSERTION_TIMEOUT });
   return {
-    timeGoal: page.getByText('Time Goal (Min)', { exact: true }).locator('input[type="number"]'),
-    startDate: page.getByText('Start Date', { exact: true }).locator('input[type="date"]')
+    timeGoal: page.getByLabel('Reading time goal (minutes)'),
+    startDate: page.getByLabel('Start date')
   };
 }
 

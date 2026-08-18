@@ -52,7 +52,7 @@ test('statistics header and settings actions operate on loaded statistics', asyn
   await expect(page.getByText(EARLIER_STAT_DATE, { exact: true })).toBeVisible({
     timeout: SYNC_ASSERTION_TIMEOUT
   });
-  await settings.getByTitle('Close statistics settings').click();
+  await settings.getByTitle('Close view options').click();
   await expect(settings).toHaveCount(0, { timeout: SYNC_ASSERTION_TIMEOUT });
 
   await page.getByRole('button', { name: /Copy/ }).click();

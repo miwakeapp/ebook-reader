@@ -7,6 +7,7 @@
   import SidebarOverlay from '$lib/components/sidebar-overlay.svelte';
   import { HeatmapType } from '$lib/components/statistics/statistics-heatmap/statistics-heatmap';
   import StatisticsHeatmap from '$lib/components/statistics/statistics-heatmap/statistics-heatmap.svelte';
+  import StatisticsGoals from '$lib/components/statistics/statistics-goals.svelte';
   import StatisticsHeader from '$lib/components/statistics/statistics-header.svelte';
   import StatisticsSettings from '$lib/components/statistics/statistics-settings.svelte';
   import StatisticsSummary from '$lib/components/statistics/statistics-summary/statistics-summary.svelte';
@@ -45,9 +46,12 @@
   let activeView = $derived(
     getValidStatisticsView(requestedStatisticsView ?? $lastStatisticsView$)
   );
-  let statisticsPageTitle = $derived(
-    activeView === 'summary' ? 'Statistics Summary' : 'Statistics Heatmap'
-  );
+  const statisticsPageTitles: Record<StatisticsView, string> = {
+    summary: 'Statistics Summary',
+    heatmap: 'Statistics Heatmap',
+    goals: 'Reading Goals'
+  };
+  let statisticsPageTitle = $derived(statisticsPageTitles[activeView]);
 
   onMount(() => {
     void controller.init(requestedStatisticsBookTitles);
@@ -107,6 +111,7 @@
 
   let summaryHref = $derived(getStatisticsTabHref('summary'));
   let heatmapHref = $derived(getStatisticsTabHref('heatmap'));
+  let goalsHref = $derived(getStatisticsTabHref('goals'));
 
   function handleTitleFilterToggle(title: string, isSelected: boolean) {
     controller.setTitleFilterSelection(title, isSelected);
@@ -133,12 +138,13 @@
 <svelte:window onkeydown={(ev) => controller.handleKeydown(ev)} />
 <StatisticsHeader
   {activeView}
-  titleFilterEnabled={controller.titleFilterEnabled}
+  titleFilterEnabled={activeView !== 'goals' && controller.titleFilterEnabled}
   oncopydata={(dataKey) => controller.copyStatisticsData(dataKey)}
   onopenfilter={() => (controller.titleFilterIsOpen = true)}
-  onopensettings={() => (controller.showStatisticsSettings = true)}
+  onopenviewoptions={() => (controller.showStatisticsSettings = true)}
   {summaryHref}
   {heatmapHref}
+  {goalsHref}
 />
 
 <div class="{pxScreen} flex min-h-full flex-col pt-16">
@@ -146,6 +152,11 @@
     <div class="fixed inset-0 flex size-full items-center justify-center text-7xl">
       <Fa icon={faSpinner} spin />
     </div>
+  {:else if activeView === 'goals'}
+    <StatisticsGoals
+      onspinner={(value) => (controller.actionInProgress = value)}
+      ongoalschange={(readingGoals) => (controller.readingGoals = readingGoals)}
+    />
   {:else if activeView === 'summary'}
     <StatisticsSummary
       aggregatedStatistics={controller.aggregatedStatistics}
@@ -193,7 +204,7 @@
   bind:open={controller.showStatisticsSettings}
   side="right"
   class="overflow-hidden bg-gray-700 text-white"
-  closeTitle="Close statistics settings"
+  closeTitle="Close view options"
 >
   <StatisticsSettings
     ondeletestatisticsdata={(deleteAllData) => controller.deleteStatisticsData(deleteAllData)}

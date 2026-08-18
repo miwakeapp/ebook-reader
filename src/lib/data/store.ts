@@ -20,7 +20,7 @@ import type { MergeMode } from '$lib/data/merge-mode';
 import type { ReadingGoal } from '$lib/data/reading-goal';
 import { SortDirection, type SortOption } from '$lib/functions/sorting';
 import { AutoReplicationType } from '$lib/functions/replication/replication-options';
-import { derived } from 'svelte/store';
+import { derived, type Writable } from 'svelte/store';
 import { DatabaseService } from './database/books-db/database.service.svelte';
 import { createBooksDb } from './database/books-db/factory';
 import { FuriganaStyle } from './furigana-style';
@@ -66,10 +66,6 @@ export const furiganaStyle$ = stringLocalStorageStore<FuriganaStyle>(
   FuriganaStyle.Default
 );
 export const writingMode$ = stringLocalStorageStore<WritingMode>('writingMode', 'vertical-rl');
-export const enableVerticalFontKerning$ = booleanLocalStorageStore(
-  'enableVerticalFontKerning',
-  false
-);
 export const enableFontVPAL$ = booleanLocalStorageStore('enableFontVPAL', false);
 export const verticalTextOrientation$ = stringLocalStorageStore<VerticalTextOrientation>(
   'verticalTextOrientation',
@@ -101,7 +97,7 @@ export const swipeThreshold$ = numberLocalStorageStore('swipeThreshold', 10);
 
 export const disableWheelNavigation$ = booleanLocalStorageStore('disableWheelNavigation', false);
 
-export const autoPositionOnResize$ = booleanLocalStorageStore('autoPositionOnResize', true);
+export const wheelNavigationEnabled$ = invertedBooleanStore(disableWheelNavigation$);
 
 export const avoidPageBreak$ = booleanLocalStorageStore('avoidPageBreak', false);
 
@@ -125,6 +121,8 @@ export const enableTapEdgeToFlip$ = booleanLocalStorageStore('enableTapEdgeToFli
 export const confirmClose$ = booleanLocalStorageStore('confirmClose', false);
 
 export const manualBookmark$ = booleanLocalStorageStore('manualBookmark', false);
+
+export const savePositionOnExit$ = invertedBooleanStore(manualBookmark$);
 
 export const autoBookmark$ = booleanLocalStorageStore('autoBookmark', true);
 
@@ -298,6 +296,20 @@ export const lastStatisticsSummarySortDirection$ = stringLocalStorageStore<SortD
 );
 
 const db = browser ? createBooksDb() : import('fake-indexeddb/auto').then(() => createBooksDb());
+
+function invertedBooleanStore(source: Writable<boolean>): Writable<boolean> {
+  const inverted = derived(source, (value) => !value);
+
+  return {
+    subscribe: inverted.subscribe,
+    set(value) {
+      source.set(!value);
+    },
+    update(updater) {
+      source.update((value) => !updater(!value));
+    }
+  };
+}
 
 export const database = new DatabaseService(db);
 
