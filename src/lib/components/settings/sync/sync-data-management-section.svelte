@@ -7,6 +7,7 @@
   import { showMessageDialog } from '$lib/components/message-dialog.svelte';
   import { syncState } from '$lib/data/sync/sync-store.svelte';
   import SyncButton from '$lib/components/settings/sync/sync-button.svelte';
+  import SettingsItem from '$lib/components/settings/settings-item.svelte';
   import SettingsSection from '$lib/components/settings/settings-section.svelte';
   import { showForceResyncDialog } from '$lib/components/settings/sync/force-resync-dialog.svelte';
   import { forceFullResync } from '$lib/data/sync/sync-engine';
@@ -146,22 +147,19 @@
 </script>
 
 <SettingsSection title="Data management">
-  {#each items as item, i (item.title)}
-    <div
-      class="flex items-center justify-between gap-4 py-3"
-      class:border-t={i > 0}
-      class:border-gray-400={i > 0}
-      class:border-opacity-40={i > 0}
-    >
-      <div class="flex-1">
-        <div class="font-medium" class:text-red-800={item.danger}>
-          {item.title}
+  {#each items as item (item.title)}
+    <SettingsItem>
+      <div class="flex items-center justify-between gap-4">
+        <div class="flex-1">
+          <div class="font-medium" class:text-red-800={item.danger}>
+            {item.title}
+          </div>
+          <div class="mt-0.5 text-sm text-gray-600">{item.description}</div>
         </div>
-        <div class="mt-0.5 text-sm text-gray-600">{item.description}</div>
+        <SyncButton variant={item.variant} disabled={item.disabled} onclick={item.onclick}
+          >{item.action}</SyncButton
+        >
       </div>
-      <SyncButton variant={item.variant} disabled={item.disabled} onclick={item.onclick}
-        >{item.action}</SyncButton
-      >
-    </div>
+    </SettingsItem>
   {/each}
 </SettingsSection>

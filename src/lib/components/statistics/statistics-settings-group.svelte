@@ -2,7 +2,7 @@
   import type { Snippet } from 'svelte';
   import { faCircleQuestion } from '@fortawesome/free-solid-svg-icons';
   import Fa from 'svelte-fa';
-  import Popover from '../popover/popover.svelte';
+  import Popover from '$lib/components/popover/popover.svelte';
 
   interface Props {
     title: string;

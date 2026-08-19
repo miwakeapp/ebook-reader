@@ -10,15 +10,25 @@ import { localStorage as appLocalStorage } from '$lib/data/window/local-storage'
  * any settings page would export an empty preferences blob.
  */
 const preferenceSerializers = new Map<string, () => string>();
+const legacyPreferenceKeys = new Set<string>();
 
 /**
  * Read-only view of the registry, used by the App-settings backup.
  */
 export const localStoragePreferences = {
-  has: (key: string) => preferenceSerializers.has(key),
+  has: (key: string) => preferenceSerializers.has(key) || legacyPreferenceKeys.has(key),
   keys: () => preferenceSerializers.keys(),
   serialize: (key: string) => preferenceSerializers.get(key)?.()
 };
+
+/**
+ * Allow settings imports to carry obsolete preferences through one final reload, where their
+ * replacement can migrate them. Legacy keys are recognized during import but omitted from new
+ * backups because they have no serializer.
+ */
+export function registerLegacyLocalStoragePreference(key: string) {
+  legacyPreferenceKeys.add(key);
+}
 
 function persistentLocalStorageStore<T>(
   key: string,

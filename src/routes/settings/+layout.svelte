@@ -19,5 +19,7 @@
 </div>
 
 <div class="{pxScreen} h-full pt-16">
-  {@render children?.()}
+  <main class="mx-auto grid w-full max-w-5xl grid-cols-[minmax(0,1fr)] gap-8 pt-4 pb-8">
+    {@render children?.()}
+  </main>
 </div>

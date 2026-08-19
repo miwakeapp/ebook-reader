@@ -2,15 +2,11 @@
   import ThemeEditorDialog from '$lib/components/settings/theme-editor-dialog.svelte';
   import { showDialog } from '$lib/components/dialog/show-dialog';
 
-  export function showThemeEditorDialog(params: {
-    selectedTheme?: string;
-    existingThemes: { id: string; text: string }[];
-  }) {
+  export function showThemeEditorDialog(params: { selectedTheme?: string } = {}) {
     showDialog(
       ThemeEditorDialog,
       {
-        selectedTheme: params.selectedTheme,
-        existingThemes: params.existingThemes
+        selectedTheme: params.selectedTheme
       },
       {
         closedBy: 'any',
@@ -46,14 +42,12 @@
 
   interface Props {
     selectedTheme?: string;
-    existingThemes?: { id: string; text: string }[];
   }
 
-  let { selectedTheme, existingThemes = [] }: Props = $props();
+  let { selectedTheme }: Props = $props();
 
   const init = untrack(() => ({
-    selectedTheme,
-    existingThemes
+    selectedTheme
   }));
 
   const isEditMode = !!init.selectedTheme;
@@ -102,6 +96,7 @@
   let themeNameElm = $state<HTMLInputElement>();
   let customTheme: ThemeColors = $state(loadInitialTheme());
   let previewMode: FuriganaStyle = $state(FuriganaStyle.Dim);
+  let existingThemeIds = $derived([...availableThemes.keys(), ...Object.keys($customThemes$)]);
 
   function handleColorInput(attribute: keyof ThemeOption, hex: string) {
     const { r, g, b } = hexToRgb(hex);
@@ -214,8 +209,8 @@
     }}
   >
     <option value="" disabled selected>Copy from...</option>
-    {#each init.existingThemes as theme (theme.id)}
-      <option value={theme.id}>{theme.id}</option>
+    {#each existingThemeIds as themeId (themeId)}
+      <option value={themeId}>{themeId}</option>
     {/each}
   </select>
 

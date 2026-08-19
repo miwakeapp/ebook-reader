@@ -33,6 +33,7 @@
   let isOpen = $state(false);
 
   const popoverId = $derived(`font-picker-${group}`);
+  const labelId = $derived(`${popoverId}-label`);
   const fonts = $derived(bundledFonts[group]);
   const allOptions = $derived([...fonts, ...$userFonts$.map((uf) => uf.name)]);
   let focusedIndex = $state(-1);
@@ -186,8 +187,8 @@
   }
 </script>
 
-<section class="pb-8 md:pb-3">
-  <h2 class="mb-2 text-xl font-medium capitalize">{fontGroupLabels[group]}</h2>
+<div>
+  <div id={labelId} class="mb-2 font-medium capitalize">{fontGroupLabels[group]}</div>
   <button
     use:ripple
     type="button"
@@ -195,6 +196,7 @@
     class:rounded-b-none={isOpen}
     aria-haspopup="listbox"
     aria-expanded={isOpen}
+    aria-labelledby={labelId}
     popovertarget={popoverId}
   >
     <div class="min-w-0">
@@ -452,7 +454,7 @@
     bind:this={fileInput}
     onchange={handleFileUpload}
   />
-</section>
+</div>
 
 <style>
   .font-picker-popover {

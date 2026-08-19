@@ -1,17 +1,17 @@
 <script lang="ts">
   import { browser } from '$app/environment';
+  import SettingsItem from '$lib/components/settings/settings-item.svelte';
   import SettingsNumberInput from '$lib/components/settings/settings-number-input.svelte';
-  import SettingsRadioGroup from '$lib/components/settings/settings-radio-group.svelte';
-  import SettingsRow from '$lib/components/settings/settings-row.svelte';
+  import SettingsNumberItem from '$lib/components/settings/settings-number-item.svelte';
+  import SettingsRadioItem from '$lib/components/settings/settings-radio-item.svelte';
   import SettingsSection from '$lib/components/settings/settings-section.svelte';
   import SettingsSegmentedControl from '$lib/components/settings/settings-segmented-control.svelte';
-  import SettingsSwitchRow from '$lib/components/settings/settings-switch-row.svelte';
+  import SettingsSwitchItem from '$lib/components/settings/settings-switch-item.svelte';
   import {
     autoBookmark$,
     autoBookmarkTime$,
     avoidPageBreak$,
     confirmClose$,
-    customReadingPointEnabled$,
     enableReaderWakeLock$,
     enableTapEdgeToFlip$,
     firstDimensionMargin$,
@@ -37,7 +37,6 @@
 
   type DimensionMode = 'automatic' | 'custom';
   type LineLengthMode = 'available' | 'custom';
-  type PageColumnMode = 'automatic' | 'one' | 'two';
   type SwipeSensitivity = 'high' | 'medium' | 'low';
 
   const readingFlowOptions = [
@@ -61,19 +60,19 @@
     {
       id: 'available' as const,
       label: 'Fit available space',
-      description: 'Do not impose a maximum line length.',
+      description: 'Do not limit the reading area.',
       isDefault: true
     },
     {
       id: 'custom' as const,
       label: 'Custom',
-      description: 'Limit line length to a fixed size.'
+      description: 'Set a fixed maximum; the reader still shrinks on smaller screens.'
     }
   ];
   const pageColumnOptions = [
-    { id: 'automatic' as const, label: 'Auto' },
-    { id: 'one' as const, label: '1' },
-    { id: 'two' as const, label: '2' }
+    { id: 0, label: 'Auto' },
+    { id: 1, label: '1' },
+    { id: 2, label: '2' }
   ];
   const swipeSensitivityOptions = [
     { id: 'high' as const, label: 'High' },
@@ -87,9 +86,6 @@
     $secondDimensionMaxValue$ > 0 ? 'custom' : 'available'
   );
   let rememberedLineLength = $state($secondDimensionMaxValue$ || 960);
-  let pageColumnMode = $state<PageColumnMode>(
-    $pageColumns$ === 1 ? 'one' : $pageColumns$ === 2 ? 'two' : 'automatic'
-  );
   let swipeSensitivity = $state<SwipeSensitivity>(
     $swipeThreshold$ <= 15 ? 'high' : $swipeThreshold$ <= 55 ? 'medium' : 'low'
   );
@@ -102,7 +98,7 @@
     if (pageMarginMode === 'automatic') {
       if ($firstDimensionMargin$ > 0) rememberedPageMargin = $firstDimensionMargin$;
       $firstDimensionMargin$ = 0;
-    } else if ($firstDimensionMargin$ <= 0) {
+    } else {
       $firstDimensionMargin$ = rememberedPageMargin;
     }
   });
@@ -111,13 +107,9 @@
     if (lineLengthMode === 'available') {
       if ($secondDimensionMaxValue$ > 0) rememberedLineLength = $secondDimensionMaxValue$;
       $secondDimensionMaxValue$ = 0;
-    } else if ($secondDimensionMaxValue$ <= 0) {
+    } else {
       $secondDimensionMaxValue$ = rememberedLineLength;
     }
-  });
-
-  $effect(() => {
-    $pageColumns$ = pageColumnMode === 'one' ? 1 : pageColumnMode === 'two' ? 2 : 0;
   });
 
   $effect(() => {
@@ -142,231 +134,205 @@
   <title>{formatPageTitle('Reading Settings')}</title>
 </svelte:head>
 
-<div class="mx-auto max-w-5xl">
-  <SettingsSection title="Layout">
-    <SettingsRow
-      label="Reading flow"
-      description="Turn pages or scroll through one continuous document."
+<SettingsSection title="Layout">
+  <SettingsItem
+    label="Reading flow"
+    description="Turn pages or scroll through one continuous document."
+  >
+    {#snippet control()}
+      <SettingsSegmentedControl
+        label="Reading flow"
+        options={readingFlowOptions}
+        bind:value={$viewMode$}
+      />
+    {/snippet}
+  </SettingsItem>
+
+  {#if paginated && !vertical}
+    <SettingsItem
+      label="Text columns"
+      description="Auto adds columns as needed to keep each one roughly 1,000 px wide or less."
+      inset
     >
       {#snippet control()}
         <SettingsSegmentedControl
-          label="Reading flow"
-          options={readingFlowOptions}
-          bind:value={$viewMode$}
+          label="Text columns"
+          options={pageColumnOptions}
+          bind:value={$pageColumns$}
         />
       {/snippet}
-    </SettingsRow>
+    </SettingsItem>
+  {/if}
 
-    <SettingsRadioGroup
-      legend="Page margins"
-      description={vertical
-        ? 'Blank space to the left and right of vertical text.'
-        : 'Blank space above and below horizontal text.'}
-      name="page-margins"
-      options={pageMarginOptions}
-      bind:value={pageMarginMode}
+  {#if paginated}
+    <SettingsSwitchItem
+      label="Keep paragraphs on one page"
+      description="Avoid splitting a paragraph between pages when possible; this can leave blank space."
+      bind:checked={$avoidPageBreak$}
+      inset
     />
-    {#if pageMarginMode === 'custom'}
-      <div class="ml-7 border-l border-gray-400/40 pl-4">
-        <SettingsRow
-          label="Custom page margin"
-          description="A fixed CSS-pixel value on each side."
-          controlId="reading-custom-page-margin"
-        >
-          {#snippet control()}
-            <SettingsNumberInput
-              id="reading-custom-page-margin"
-              bind:value={$firstDimensionMargin$}
-              unit="px"
-              min={1}
-              max={1000}
-              step={1}
-            />
-          {/snippet}
-        </SettingsRow>
-      </div>
-    {/if}
+  {/if}
 
-    <SettingsRadioGroup
-      legend="Maximum line length"
-      description={vertical
-        ? 'Limits the height of each vertical line.'
-        : 'Limits the width of each horizontal line.'}
-      name="maximum-line-length"
-      options={lineLengthOptions}
-      bind:value={lineLengthMode}
+  <SettingsRadioItem
+    legend="Page margins"
+    description={vertical
+      ? 'Blank space to the left and right of vertical text.'
+      : 'Blank space above and below horizontal text.'}
+    options={pageMarginOptions}
+    bind:value={pageMarginMode}
+  >
+    {#snippet optionControl(option, { labelledBy })}
+      {#if option === 'custom'}
+        <SettingsNumberInput
+          id="reading-custom-page-margin"
+          bind:value={rememberedPageMargin}
+          unit="px"
+          {labelledBy}
+          min={1}
+          max={1000}
+          step={1}
+          disabled={pageMarginMode !== 'custom'}
+        />
+      {/if}
+    {/snippet}
+  </SettingsRadioItem>
+
+  <SettingsRadioItem
+    legend={vertical ? 'Maximum reading area height' : 'Maximum reading area width'}
+    description={vertical
+      ? 'Limits the overall height available to vertical text.'
+      : 'Limits the overall width available to horizontal text.'}
+    options={lineLengthOptions}
+    bind:value={lineLengthMode}
+  >
+    {#snippet optionControl(option, { labelledBy })}
+      {#if option === 'custom'}
+        <SettingsNumberInput
+          id="reading-custom-maximum"
+          bind:value={rememberedLineLength}
+          unit="px"
+          {labelledBy}
+          min={100}
+          max={4000}
+          step={10}
+          disabled={lineLengthMode !== 'custom'}
+        />
+      {/if}
+    {/snippet}
+  </SettingsRadioItem>
+</SettingsSection>
+
+<SettingsSection title="Navigation">
+  {#if paginated}
+    <SettingsSwitchItem
+      label="Turn pages with the mouse wheel"
+      description="Use vertical wheel movement to move through paginated books."
+      bind:checked={$wheelNavigationEnabled$}
     />
-    {#if lineLengthMode === 'custom'}
-      <div class="ml-7 border-l border-gray-400/40 pl-4">
-        <SettingsRow
-          label="Custom maximum"
-          description="A fixed CSS-pixel limit; the reader still shrinks on smaller screens."
-          controlId="reading-custom-maximum"
-        >
-          {#snippet control()}
-            <SettingsNumberInput
-              id="reading-custom-maximum"
-              bind:value={$secondDimensionMaxValue$}
-              unit="px"
-              min={100}
-              max={4000}
-              step={10}
-            />
-          {/snippet}
-        </SettingsRow>
-      </div>
-    {/if}
-
-    {#if paginated && !vertical}
-      <SettingsRow
-        label="Text columns"
-        description="Auto adds another column on sufficiently wide screens."
-      >
-        {#snippet control()}
-          <SettingsSegmentedControl
-            label="Text columns"
-            options={pageColumnOptions}
-            bind:value={pageColumnMode}
-          />
-        {/snippet}
-      </SettingsRow>
-    {/if}
-
-    {#if paginated}
-      <SettingsSwitchRow
-        label="Keep paragraphs on one page"
-        description="Avoid splitting a paragraph between pages when possible; this can leave blank space."
-        bind:checked={$avoidPageBreak$}
-      />
-    {/if}
-  </SettingsSection>
-
-  <SettingsSection title="Navigation">
-    {#if paginated}
-      <SettingsSwitchRow
-        label="Turn pages with the mouse wheel"
-        description="Use vertical wheel movement to move through paginated books."
-        bind:checked={$wheelNavigationEnabled$}
-      />
-      <SettingsSwitchRow
-        label="Tap page edges to turn pages"
-        description="Reserve a small area on either edge for page turning."
-        bind:checked={$enableTapEdgeToFlip$}
-      />
-      <SettingsRow
-        label="Swipe sensitivity"
-        description="How far a swipe must travel before the page turns."
-      >
-        {#snippet control()}
-          <SettingsSegmentedControl
-            label="Swipe sensitivity"
-            options={swipeSensitivityOptions}
-            bind:value={swipeSensitivity}
-          />
-        {/snippet}
-      </SettingsRow>
-    {:else}
-      <p class="py-3 text-sm text-gray-600">
+    <SettingsSwitchItem
+      label="Tap page edges to turn pages"
+      description="Reserve a small area on either edge for page turning."
+      bind:checked={$enableTapEdgeToFlip$}
+    />
+    <SettingsItem
+      label="Swipe sensitivity"
+      description="How far a swipe must travel before the page turns."
+    >
+      {#snippet control()}
+        <SettingsSegmentedControl
+          label="Swipe sensitivity"
+          options={swipeSensitivityOptions}
+          bind:value={swipeSensitivity}
+        />
+      {/snippet}
+    </SettingsItem>
+  {:else}
+    <SettingsItem>
+      <p class="text-sm text-gray-600">
         Page-turning controls appear here when Reading flow is set to Pages.
       </p>
-    {/if}
+    </SettingsItem>
+  {/if}
 
-    {#if wakeLockSupported}
-      <SettingsSwitchRow
-        label="Keep the screen awake while reading"
-        description="Prevent this device from dimming or locking while the reader is visible."
-        bind:checked={$enableReaderWakeLock$}
+  {#if wakeLockSupported}
+    <SettingsSwitchItem
+      label="Keep the screen awake while reading"
+      description="Prevent this device from dimming or locking while the reader is visible."
+      bind:checked={$enableReaderWakeLock$}
+    />
+  {/if}
+</SettingsSection>
+
+<SettingsSection title="Saving your place">
+  <SettingsSwitchItem
+    label="Save my position while reading"
+    description="Bookmark your position after a short pause in page movement."
+    bind:checked={$autoBookmark$}
+  />
+  {#if $autoBookmark$}
+    <SettingsNumberItem
+      label="Save after"
+      description="Time without scrolling or changing pages."
+      bind:value={$autoBookmarkTime$}
+      unit="seconds"
+      min={1}
+      max={300}
+      step={1}
+      inset
+    />
+  {/if}
+
+  <SettingsSwitchItem
+    label="Save my position when leaving"
+    description="Update the bookmark before returning to the library or another app page."
+    bind:checked={$savePositionOnExit$}
+  />
+  {#if !$savePositionOnExit$}
+    <SettingsSwitchItem
+      label="Warn before leaving with unsaved progress"
+      description="Ask for confirmation when the latest position has not been bookmarked."
+      bind:checked={$confirmClose$}
+      inset
+    />
+  {/if}
+
+  {#if paginated}
+    <SettingsSwitchItem
+      label="Anchor bookmarks near selected text"
+      description="Use current or recently selected text instead of the page start when placing a bookmark."
+      bind:checked={$selectionToBookmarkEnabled$}
+    />
+  {:else}
+    {#if $statisticsEnabled$}
+      <SettingsSwitchItem
+        label="Pause tracking while moving the marker"
+        description="Resume tracking automatically after the marker has been placed."
+        bind:checked={$pauseTrackerOnCustomPointChange$}
       />
     {/if}
-  </SettingsSection>
-
-  <SettingsSection title="Saving your place">
-    <SettingsSwitchRow
-      label="Save my position while reading"
-      description="Bookmark your position after a short pause in page movement."
-      bind:checked={$autoBookmark$}
-    />
-    {#if $autoBookmark$}
-      <div class="ml-7 border-l border-gray-400/40 pl-4">
-        <SettingsRow
-          label="Save after"
-          description="Time without scrolling or changing pages."
-          controlId="reading-save-after"
+    <SettingsItem
+      label="Reset reading marker"
+      description="Return the marker to its default position for each text direction."
+    >
+      {#snippet control()}
+        <button
+          type="button"
+          class="rounded border border-gray-500 px-3 py-1.5 text-sm font-medium hover:bg-gray-400/15"
+          onclick={resetReadingMarker}
         >
-          {#snippet control()}
-            <SettingsNumberInput
-              id="reading-save-after"
-              bind:value={$autoBookmarkTime$}
-              unit="seconds"
-              min={1}
-              max={300}
-              step={1}
-            />
-          {/snippet}
-        </SettingsRow>
-      </div>
-    {/if}
+          Reset marker
+        </button>
+      {/snippet}
+    </SettingsItem>
+  {/if}
+</SettingsSection>
 
-    <SettingsSwitchRow
-      label="Save my position when leaving"
-      description="Update the bookmark before returning to the library or another app page."
-      bind:checked={$savePositionOnExit$}
-    />
-    {#if !$savePositionOnExit$}
-      <div class="ml-7 border-l border-gray-400/40 pl-4">
-        <SettingsSwitchRow
-          label="Warn before leaving with unsaved progress"
-          description="Ask for confirmation when the latest position has not been bookmarked."
-          bind:checked={$confirmClose$}
-        />
-      </div>
-    {/if}
-
-    {#if paginated}
-      <SettingsSwitchRow
-        label="Anchor bookmarks near selected text"
-        description="Use current or recently selected text instead of the page start when placing a bookmark."
-        bind:checked={$selectionToBookmarkEnabled$}
-      />
-    {:else}
-      <SettingsSwitchRow
-        label="Use a fixed reading marker"
-        description="Calculate progress and bookmarks from a persistent marker that you position in the reader."
-        bind:checked={$customReadingPointEnabled$}
-      />
-      {#if $customReadingPointEnabled$}
-        <div class="ml-7 border-l border-gray-400/40 pl-4">
-          {#if $statisticsEnabled$}
-            <SettingsSwitchRow
-              label="Pause tracking while moving the marker"
-              description="Resume tracking automatically after the marker has been placed."
-              bind:checked={$pauseTrackerOnCustomPointChange$}
-            />
-          {/if}
-          <SettingsRow
-            label="Reset reading marker"
-            description="Return the horizontal and vertical markers to their default positions."
-          >
-            {#snippet control()}
-              <button
-                type="button"
-                class="rounded border border-gray-500 px-3 py-1.5 text-sm font-medium hover:bg-gray-400/15"
-                onclick={resetReadingMarker}
-              >
-                Reset marker
-              </button>
-            {/snippet}
-          </SettingsRow>
-        </div>
-      {/if}
-    {/if}
-  </SettingsSection>
-
-  <SettingsSection
-    title="Progress footer"
-    description="Choose which progress details appear at the bottom of the reader."
-  >
-    <fieldset class="overflow-x-auto py-3">
+<SettingsSection
+  title="Progress footer"
+  description="Choose which progress details appear at the bottom of the reader."
+>
+  <SettingsItem>
+    <fieldset class="max-w-full min-w-0 overflow-x-auto">
       <legend class="sr-only">Progress footer fields</legend>
       <div class="grid min-w-96 grid-cols-[minmax(8rem,1fr)_7rem_7rem] text-sm">
         <span class="border-b border-gray-400/40 p-2"></span>
@@ -388,5 +354,5 @@
         </label>
       </div>
     </fieldset>
-  </SettingsSection>
-</div>
+  </SettingsItem>
+</SettingsSection>

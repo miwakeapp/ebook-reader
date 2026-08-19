@@ -123,7 +123,6 @@
       <BackupSelectionTree {catalog} {selection} onchange={(next) => (selection = next)} />
       <SettingsRadioGroup
         legend="When the ZIP and this device disagree"
-        name="backup-import-direction"
         options={directionOptions}
         bind:value={direction}
       />

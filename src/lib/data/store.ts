@@ -30,9 +30,11 @@ import {
   booleanLocalStorageStore,
   numberLocalStorageStore,
   objectLocalStorageStore,
+  registerLegacyLocalStoragePreference,
   setLocalStorageStore,
   stringLocalStorageStore
 } from './internal/persistent-local-storage-store';
+import { localStorage as appLocalStorage } from './window/local-storage';
 import type { TextMarginMode } from './text-margin-mode';
 import type { ThemeOption } from './theme-option';
 import type { VerticalTextOrientation } from './vertical-text-orientation';
@@ -104,11 +106,6 @@ export const avoidPageBreak$ = booleanLocalStorageStore('avoidPageBreak', false)
 export const pauseTrackerOnCustomPointChange$ = booleanLocalStorageStore(
   'pauseTrackerOnCustomPointChange',
   true
-);
-
-export const customReadingPointEnabled$ = booleanLocalStorageStore(
-  'customReadingPointEnabled',
-  false
 );
 
 export const selectionToBookmarkEnabled$ = booleanLocalStorageStore(
@@ -318,14 +315,35 @@ export const booklistSortOptions$ = objectLocalStorageStore<SortOption>('booklis
   direction: SortDirection.DESC
 });
 
+const DEFAULT_VERTICAL_READING_MARKER_POSITION = 100;
+const DEFAULT_HORIZONTAL_READING_MARKER_POSITION = 0;
+
+registerLegacyLocalStoragePreference('customReadingPointEnabled');
+migrateLegacyReadingMarkerSetting();
+
+function migrateLegacyReadingMarkerSetting() {
+  if (appLocalStorage.getItem('customReadingPointEnabled') === '0') {
+    appLocalStorage.setItem(
+      'verticalCustomReadingPosition',
+      `${DEFAULT_VERTICAL_READING_MARKER_POSITION}`
+    );
+    appLocalStorage.setItem(
+      'horizontalCustomReadingPosition',
+      `${DEFAULT_HORIZONTAL_READING_MARKER_POSITION}`
+    );
+  }
+
+  appLocalStorage.removeItem('customReadingPointEnabled');
+}
+
 export const verticalCustomReadingPosition$ = numberLocalStorageStore(
   'verticalCustomReadingPosition',
-  100
+  DEFAULT_VERTICAL_READING_MARKER_POSITION
 );
 
 export const horizontalCustomReadingPosition$ = numberLocalStorageStore(
   'horizontalCustomReadingPosition',
-  0
+  DEFAULT_HORIZONTAL_READING_MARKER_POSITION
 );
 
 export const userFonts$ = arrayLocalStorageStore<UserFont>('userfonts', []);

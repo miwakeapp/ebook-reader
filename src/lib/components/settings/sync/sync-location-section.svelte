@@ -210,7 +210,7 @@
 >
   {#if !active}
     {#if browser}
-      <SyncRow first>
+      <SyncRow>
         {#snippet main()}
           <div class="font-medium">Google Drive</div>
           <div class="mt-1 text-sm text-gray-600">
@@ -286,7 +286,7 @@
       {/if}
     {/if}
   {:else if activeCloud}
-    <SyncRow first>
+    <SyncRow>
       {#snippet main()}
         <div class="flex flex-wrap items-center gap-2">
           <span class="font-medium">{providerLabel(activeCloud.provider)}</span>
@@ -377,7 +377,7 @@
       {/snippet}
     </SyncRow>
   {:else if activeFs}
-    <SyncRow first>
+    <SyncRow>
       {#snippet main()}
         <div class="flex flex-wrap items-center gap-2">
           <span class="font-medium">Sync folder</span>

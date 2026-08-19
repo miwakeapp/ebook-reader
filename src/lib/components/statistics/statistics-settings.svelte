@@ -3,7 +3,7 @@
   import ButtonToggleGroup from '$lib/components/button-toggle-group/button-toggle-group.svelte';
   import { optionsForToggle } from '$lib/components/button-toggle-group/toggle-option';
   import Popover from '$lib/components/popover/popover.svelte';
-  import SettingsItemGroup from '$lib/components/settings/settings-item-group.svelte';
+  import StatisticsSettingsGroup from '$lib/components/statistics/statistics-settings-group.svelte';
   import {
     type StatisticsDateChange,
     statisticsRangeTemplates,
@@ -232,12 +232,12 @@
     </select>
   </div>
   <div class="mt-4">
-    <SettingsItemGroup title="Confirm Statistics Deletion" applyHeaderClasses={false}>
+    <StatisticsSettingsGroup title="Confirm Statistics Deletion" applyHeaderClasses={false}>
       <ButtonToggleGroup
         invertColors
         options={optionsForToggle}
         bind:selectedOptionId={$confirmStatisticsDeletion$}
       />
-    </SettingsItemGroup>
+    </StatisticsSettingsGroup>
   </div>
 </div>

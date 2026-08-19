@@ -5,12 +5,11 @@
   } from '$lib/components/book-reader/book-reading-tracker/tracker-domain';
   import { showConfirmDialog } from '$lib/components/confirm-dialog.svelte';
   import { showErrorDialog } from '$lib/components/log-report-dialog.svelte';
-  import SettingsAdvanced from '$lib/components/settings/settings-advanced.svelte';
-  import SettingsNumberInput from '$lib/components/settings/settings-number-input.svelte';
-  import SettingsRadioGroup from '$lib/components/settings/settings-radio-group.svelte';
-  import SettingsRow from '$lib/components/settings/settings-row.svelte';
+  import SettingsItem from '$lib/components/settings/settings-item.svelte';
+  import SettingsNumberItem from '$lib/components/settings/settings-number-item.svelte';
+  import SettingsRadioItem from '$lib/components/settings/settings-radio-item.svelte';
   import SettingsSection from '$lib/components/settings/settings-section.svelte';
-  import SettingsSwitchRow from '$lib/components/settings/settings-switch-row.svelte';
+  import SettingsSwitchItem from '$lib/components/settings/settings-switch-item.svelte';
   import {
     addCharactersOnCompletion$,
     adjustStatisticsAfterIdleTime$,
@@ -65,26 +64,26 @@
   ];
   const completionDateOptions = [
     {
-      id: 'first' as const,
+      id: false,
       label: 'Keep the first completion date',
       description: 'Finishing the book again does not replace its original completion date.',
       isDefault: true
     },
     {
-      id: 'latest' as const,
+      id: true,
       label: 'Use the latest completion date',
       description: 'Each completion replaces the previously recorded date.'
     }
   ];
   const retentionOptions = [
     {
-      id: 'keep' as const,
+      id: true,
       label: 'Keep reading data',
       description: 'Preserve bookmarks and statistics in case you add the book again.',
       isDefault: true
     },
     {
-      id: 'delete' as const,
+      id: false,
       label: 'Delete reading data',
       description: 'Remove bookmarks and statistics along with the local book copy.'
     }
@@ -124,12 +123,6 @@
     $trackerIdleTime$ > 0 && Number.isFinite($trackerIdleTime$)
       ? clamp($trackerIdleTime$ / 60, 0.5, 720)
       : 15
-  );
-  let completionDateMode = $state<'first' | 'latest'>(
-    $overwriteBookCompletion$ ? 'latest' : 'first'
-  );
-  let retentionMode = $state<'keep' | 'delete'>(
-    $keepLocalReadingDataOnDeletion$ ? 'keep' : 'delete'
   );
   let forwardThresholdEnabled = $state($trackerForwardSkipThreshold$ > 0);
   let backwardThresholdEnabled = $state($trackerBackwardSkipThreshold$ > 0);
@@ -175,14 +168,6 @@
       ? clamp(Math.floor($startDayHoursForTracker$), 0, 23)
       : 0;
     $startDayHoursForTracker$ = hour;
-  });
-
-  $effect(() => {
-    $overwriteBookCompletion$ = completionDateMode === 'latest';
-  });
-
-  $effect(() => {
-    $keepLocalReadingDataOnDeletion$ = retentionMode === 'keep';
   });
 
   $effect(() => {
@@ -242,241 +227,200 @@
   <title>{formatPageTitle('Tracking Settings')}</title>
 </svelte:head>
 
-<div class="mx-auto max-w-5xl">
-  <SettingsSection title="Reading activity">
-    <SettingsSwitchRow
-      label="Track reading activity"
-      description="Show the tracker in the reader and record reading time, characters, and speed."
-      bind:checked={$statisticsEnabled$}
-    />
-  </SettingsSection>
+<SettingsSection title="Reading activity">
+  <SettingsSwitchItem
+    label="Track reading activity"
+    description="Show the tracker in the reader and record reading time, characters, and speed."
+    bind:checked={$statisticsEnabled$}
+  />
+</SettingsSection>
 
-  <SettingsSection
-    title="Starting and pausing"
-    description="These options apply when reading activity tracking is on."
+<SettingsSection
+  title="Starting and pausing"
+  description="These options apply when reading activity tracking is on."
+>
+  <SettingsRadioItem
+    legend="Start tracking"
+    options={trackerStartOptions}
+    bind:value={trackerStartMode}
+    disabled={!$statisticsEnabled$}
+  />
+  {#if trackerStartMode === 'automatic'}
+    <SettingsNumberItem
+      label="Start after"
+      description="A short delay avoids counting position changes while a book is still opening."
+      bind:value={$trackerAutostartTime$}
+      unit="seconds"
+      min={1}
+      max={300}
+      step={1}
+      disabled={!$statisticsEnabled$}
+      inset
+    />
+  {/if}
+
+  <SettingsRadioItem
+    legend="Pause tracking"
+    description="Choose how readily focus changes pause an active session."
+    options={trackerAutoPauseOptions}
+    bind:value={$trackerAutoPause$}
+    disabled={!$statisticsEnabled$}
+  />
+  {#if $trackerAutoPause$ !== TrackerAutoPause.OFF}
+    <SettingsSwitchItem
+      label="Keep tracking during supported dictionary lookups"
+      description="Do not pause when a Yomitan or jpdb Browser Reader lookup is detected. Yomitan requires Secure Container to be off."
+      bind:checked={$trackerPopupDetection$}
+      disabled={!$statisticsEnabled$}
+      inset
+    />
+  {/if}
+
+  <SettingsSwitchItem
+    label="Pause after no page activity"
+    description="Automatically pause a session when you stop turning pages or scrolling."
+    bind:checked={idlePauseEnabled}
+    disabled={!$statisticsEnabled$}
+  />
+  {#if idlePauseEnabled}
+    <SettingsNumberItem
+      label="Idle time"
+      description="From 30 seconds to 12 hours."
+      bind:value={idleMinutes}
+      unit="minutes"
+      min={0.5}
+      max={720}
+      step={0.5}
+      disabled={!$statisticsEnabled$}
+      inset
+    />
+    <SettingsSwitchItem
+      label="Remove idle time from the session"
+      description="Subtract the idle period when the tracker pauses automatically."
+      bind:checked={$adjustStatisticsAfterIdleTime$}
+      disabled={!$statisticsEnabled$}
+      inset
+    />
+  {/if}
+</SettingsSection>
+
+<SettingsSection title="Completing a book">
+  <SettingsSwitchItem
+    label="Open the tracker on completion"
+    description="Show the current session when you mark a book complete."
+    bind:checked={$openTrackerOnCompletion$}
+    disabled={!$statisticsEnabled$}
+  />
+  <SettingsSwitchItem
+    label="Count unread characters on completion"
+    description="Add the characters between your current position and the end of the book."
+    bind:checked={$addCharactersOnCompletion$}
+    disabled={!$statisticsEnabled$}
+  />
+  <SettingsRadioItem
+    legend="Completion date"
+    options={completionDateOptions}
+    bind:value={$overwriteBookCompletion$}
+  />
+</SettingsSection>
+
+<SettingsSection
+  title="Day boundary"
+  description="Reading before this time counts toward the previous day."
+>
+  <SettingsItem
+    label="A new reading day starts at"
+    description="This affects daily statistics and reading goals."
+    controlId="tracking-day-boundary"
   >
-    <SettingsRadioGroup
-      legend="Start tracking"
-      name="tracker-start"
-      options={trackerStartOptions}
-      bind:value={trackerStartMode}
-      disabled={!$statisticsEnabled$}
-    />
-    {#if trackerStartMode === 'automatic'}
-      <div class="ml-7 border-l border-gray-400/40 pl-4">
-        <SettingsRow
-          label="Start after"
-          description="A short delay avoids counting position changes while a book is still opening."
-          controlId="tracking-start-after"
-          disabled={!$statisticsEnabled$}
-        >
-          {#snippet control()}
-            <SettingsNumberInput
-              id="tracking-start-after"
-              bind:value={$trackerAutostartTime$}
-              unit="seconds"
-              min={1}
-              max={300}
-              step={1}
-              disabled={!$statisticsEnabled$}
-            />
-          {/snippet}
-        </SettingsRow>
-      </div>
-    {/if}
+    {#snippet control()}
+      <select
+        id="tracking-day-boundary"
+        class="rounded border border-gray-400 bg-white px-3 py-2"
+        aria-labelledby="tracking-day-boundary-label"
+        aria-describedby="tracking-day-boundary-description"
+        bind:value={$startDayHoursForTracker$}
+      >
+        {#each dayBoundaryOptions as option (option.hour)}
+          <option value={option.hour}>{option.label}</option>
+        {/each}
+      </select>
+    {/snippet}
+  </SettingsItem>
+</SettingsSection>
 
-    <SettingsRadioGroup
-      legend="Pause tracking"
-      description="Choose how readily focus changes pause an active session."
-      name="tracker-auto-pause"
-      options={trackerAutoPauseOptions}
-      bind:value={$trackerAutoPause$}
-      disabled={!$statisticsEnabled$}
-    />
-    {#if $trackerAutoPause$ !== TrackerAutoPause.OFF}
-      <div class="ml-7 border-l border-gray-400/40 pl-4">
-        <SettingsSwitchRow
-          label="Keep tracking during supported dictionary lookups"
-          description="Do not pause when a Yomitan or jpdb Browser Reader lookup is detected. Yomitan requires Secure Container to be off."
-          bind:checked={$trackerPopupDetection$}
-          disabled={!$statisticsEnabled$}
-        />
-      </div>
-    {/if}
-
-    <SettingsSwitchRow
-      label="Pause after no page activity"
-      description="Automatically pause a session when you stop turning pages or scrolling."
-      bind:checked={idlePauseEnabled}
-      disabled={!$statisticsEnabled$}
-    />
-    {#if idlePauseEnabled}
-      <div class="ml-7 border-l border-gray-400/40 pl-4">
-        <SettingsRow
-          label="Idle time"
-          description="From 30 seconds to 12 hours."
-          controlId="tracking-idle-time"
-          disabled={!$statisticsEnabled$}
-        >
-          {#snippet control()}
-            <SettingsNumberInput
-              id="tracking-idle-time"
-              bind:value={idleMinutes}
-              unit="minutes"
-              min={0.5}
-              max={720}
-              step={0.5}
-              disabled={!$statisticsEnabled$}
-            />
-          {/snippet}
-        </SettingsRow>
-        <SettingsSwitchRow
-          label="Remove idle time from the session"
-          description="Subtract the idle period when the tracker pauses automatically."
-          bind:checked={$adjustStatisticsAfterIdleTime$}
-          disabled={!$statisticsEnabled$}
-        />
-      </div>
-    {/if}
-  </SettingsSection>
-
-  <SettingsSection title="Completing a book">
-    <SettingsSwitchRow
-      label="Open the tracker on completion"
-      description="Show the current session when you mark a book complete."
-      bind:checked={$openTrackerOnCompletion$}
-      disabled={!$statisticsEnabled$}
-    />
-    <SettingsSwitchRow
-      label="Count unread characters on completion"
-      description="Add the characters between your current position and the end of the book."
-      bind:checked={$addCharactersOnCompletion$}
-      disabled={!$statisticsEnabled$}
-    />
-    <SettingsRadioGroup
-      legend="Completion date"
-      name="completion-date"
-      options={completionDateOptions}
-      bind:value={completionDateMode}
-    />
-  </SettingsSection>
-
-  <SettingsSection
-    title="Day boundary"
-    description="Reading before this time counts toward the previous day."
+<SettingsSection
+  title="Reading data when removing books"
+  description="Choose what happens to local bookmarks and statistics when you delete a book copy."
+>
+  <SettingsRadioItem
+    legend="After removing a book"
+    options={retentionOptions}
+    bind:value={$keepLocalReadingDataOnDeletion$}
+  />
+  <SettingsItem
+    label="Delete data left by books already removed"
+    description="Permanently remove orphaned bookmarks and statistics without affecting books still in your library."
   >
-    <SettingsRow
-      label="A new reading day starts at"
-      description="This affects daily statistics and reading goals."
-      controlId="tracking-day-boundary"
-    >
-      {#snippet control()}
-        <select
-          id="tracking-day-boundary"
-          class="rounded border border-gray-400 bg-white px-3 py-2"
-          aria-describedby="tracking-day-boundary-description"
-          bind:value={$startDayHoursForTracker$}
-        >
-          {#each dayBoundaryOptions as option (option.hour)}
-            <option value={option.hour}>{option.label}</option>
-          {/each}
-        </select>
-      {/snippet}
-    </SettingsRow>
-  </SettingsSection>
+    {#snippet control()}
+      <button
+        type="button"
+        class="rounded border border-red-700 px-3 py-1.5 text-sm font-medium text-red-800 hover:bg-red-50 disabled:cursor-wait disabled:opacity-60"
+        disabled={cleanupInProgress}
+        onclick={deleteOrphanedReadingData}
+      >
+        {cleanupInProgress ? 'Deleting…' : 'Delete old data…'}
+      </button>
+    {/snippet}
+    <p class="min-h-5 text-sm text-gray-600" aria-live="polite">{cleanupStatus}</p>
+  </SettingsItem>
+</SettingsSection>
 
-  <SettingsSection
-    title="Reading data when removing books"
-    description="Choose what happens to local bookmarks and statistics when you delete a book copy."
-  >
-    <SettingsRadioGroup
-      legend="After removing a book"
-      name="reading-data-retention"
-      options={retentionOptions}
-      bind:value={retentionMode}
+<SettingsSection
+  title="Advanced tracking options"
+  description="Detect unusually large position jumps so they do not distort reading statistics."
+  collapsible
+>
+  <SettingsSwitchItem
+    label="Detect large forward jumps"
+    description="Treat moving forward by more than a set number of characters as a skip."
+    bind:checked={forwardThresholdEnabled}
+    disabled={!$statisticsEnabled$}
+  />
+  {#if forwardThresholdEnabled}
+    <SettingsNumberItem
+      label="Forward jump threshold"
+      bind:value={$trackerForwardSkipThreshold$}
+      unit="characters"
+      min={1}
+      step={1}
+      disabled={!$statisticsEnabled$}
+      inset
     />
-    <SettingsRow
-      label="Delete data left by books already removed"
-      description="Permanently remove orphaned bookmarks and statistics without affecting books still in your library."
-    >
-      {#snippet control()}
-        <button
-          type="button"
-          class="rounded border border-red-700 px-3 py-1.5 text-sm font-medium text-red-800 hover:bg-red-50 disabled:cursor-wait disabled:opacity-60"
-          disabled={cleanupInProgress}
-          onclick={deleteOrphanedReadingData}
-        >
-          {cleanupInProgress ? 'Deleting…' : 'Delete old data…'}
-        </button>
-      {/snippet}
-    </SettingsRow>
-    <p class="min-h-5 pt-2 text-sm text-gray-600" aria-live="polite">{cleanupStatus}</p>
-  </SettingsSection>
-
-  <SettingsAdvanced
-    title="Advanced tracking options"
-    description="Detect unusually large position jumps so they do not distort reading statistics."
-  >
-    <SettingsSwitchRow
-      label="Detect large forward jumps"
-      description="Treat moving forward by more than a set number of characters as a skip."
-      bind:checked={forwardThresholdEnabled}
+  {/if}
+  <SettingsSwitchItem
+    label="Detect large backward jumps"
+    description="Treat moving backward by more than a set number of characters as a skip."
+    bind:checked={backwardThresholdEnabled}
+    disabled={!$statisticsEnabled$}
+  />
+  {#if backwardThresholdEnabled}
+    <SettingsNumberItem
+      label="Backward jump threshold"
+      bind:value={$trackerBackwardSkipThreshold$}
+      unit="characters"
+      min={1}
+      step={1}
+      disabled={!$statisticsEnabled$}
+      inset
+    />
+  {/if}
+  {#if forwardThresholdEnabled || backwardThresholdEnabled}
+    <SettingsRadioItem
+      legend="When a large jump is detected"
+      options={thresholdActionOptions}
+      bind:value={$trackerSkipThresholdAction$}
       disabled={!$statisticsEnabled$}
     />
-    {#if forwardThresholdEnabled}
-      <div class="ml-7 border-l border-gray-400/40 pl-4">
-        <SettingsRow
-          label="Forward jump threshold"
-          controlId="tracking-forward-jump-threshold"
-          disabled={!$statisticsEnabled$}
-        >
-          {#snippet control()}
-            <SettingsNumberInput
-              id="tracking-forward-jump-threshold"
-              bind:value={$trackerForwardSkipThreshold$}
-              unit="characters"
-              min={1}
-              step={1}
-              disabled={!$statisticsEnabled$}
-            />
-          {/snippet}
-        </SettingsRow>
-      </div>
-    {/if}
-    <SettingsSwitchRow
-      label="Detect large backward jumps"
-      description="Treat moving backward by more than a set number of characters as a skip."
-      bind:checked={backwardThresholdEnabled}
-      disabled={!$statisticsEnabled$}
-    />
-    {#if backwardThresholdEnabled}
-      <div class="ml-7 border-l border-gray-400/40 pl-4">
-        <SettingsRow
-          label="Backward jump threshold"
-          controlId="tracking-backward-jump-threshold"
-          disabled={!$statisticsEnabled$}
-        >
-          {#snippet control()}
-            <SettingsNumberInput
-              id="tracking-backward-jump-threshold"
-              bind:value={$trackerBackwardSkipThreshold$}
-              unit="characters"
-              min={1}
-              step={1}
-              disabled={!$statisticsEnabled$}
-            />
-          {/snippet}
-        </SettingsRow>
-      </div>
-    {/if}
-    {#if forwardThresholdEnabled || backwardThresholdEnabled}
-      <SettingsRadioGroup
-        legend="When a large jump is detected"
-        name="skip-threshold-action"
-        options={thresholdActionOptions}
-        bind:value={$trackerSkipThresholdAction$}
-        disabled={!$statisticsEnabled$}
-      />
-    {/if}
-  </SettingsAdvanced>
-</div>
+  {/if}
+</SettingsSection>

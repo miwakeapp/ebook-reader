@@ -82,12 +82,7 @@
   description={`Walks every book, bookmark, reading statistic, and reading goal in your library to check for differences between ${locationLabel} and this device.`}
 >
   <div class="space-y-2">
-    <SettingsRadioGroup
-      legend="Direction"
-      name="force-resync-direction"
-      {options}
-      bind:value={direction}
-    />
+    <SettingsRadioGroup legend="Direction" {options} bind:value={direction} />
     <p class="text-xs text-gray-600">
       Reading statistics and reading goals also respect the merge-mode settings in Advanced, which
       govern how entries combine at the destination on top of the direction above.

@@ -41,7 +41,6 @@
     confirmClose$,
     verticalCustomReadingPosition$,
     horizontalCustomReadingPosition$,
-    customReadingPointEnabled$,
     statisticsEnabled$,
     openTrackerOnCompletion$,
     addCharactersOnCompletion$,
@@ -1026,10 +1025,6 @@
   }
 
   function handleSetCustomReadingPoint() {
-    if (!$customReadingPointEnabled$ && !isPaginated) {
-      return;
-    }
-
     const contentEl = document.querySelector('.book-content');
 
     if (!contentEl) {
@@ -1303,9 +1298,8 @@
     hasChapterData={bookTOCState.hasChapters}
     hasText={!!bookCharCount}
     hasCustomReadingPoint={!!(
-      ($customReadingPointEnabled$ || isPaginated) &&
-      ((isPaginated && customReadingPointRange) ||
-        (!isPaginated && customReadingPointLeft > -1 && customReadingPointTop > -1))
+      (isPaginated && customReadingPointRange) ||
+      (!isPaginated && customReadingPointLeft > -1 && customReadingPointTop > -1)
     )}
     showFullscreenButton={fullscreenManager.fullscreenEnabled}
     autoScrollMultiplier={$multiplier$}

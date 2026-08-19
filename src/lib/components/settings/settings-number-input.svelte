@@ -7,9 +7,25 @@
     max?: number;
     step?: number;
     disabled?: boolean;
+    labelledBy?: string;
+    describedBy?: string;
   }
 
-  let { id, value = $bindable(), unit, min, max, step, disabled = false }: Props = $props();
+  let {
+    id,
+    value = $bindable(),
+    unit,
+    min,
+    max,
+    step,
+    disabled = false,
+    labelledBy,
+    describedBy
+  }: Props = $props();
+
+  const descriptionIds = $derived(
+    describedBy === undefined ? `${id}-unit` : `${describedBy} ${id}-unit`
+  );
 
   function inRange(candidate: number) {
     return (
@@ -41,11 +57,13 @@
   }
 </script>
 
-<div class="number-input" class:is-disabled={disabled}>
+<div class={['inline-flex min-w-0 items-baseline gap-2', disabled && 'opacity-[0.55]']}>
   <input
     {id}
     type="number"
-    aria-describedby={`${id}-description ${id}-unit`}
+    class="w-28 min-w-0 rounded-none border-0 border-b-2 border-gray-400/50 bg-transparent px-1.5 py-1 text-inherit transition-colors focus:border-b-black focus:ring-0 focus:outline-none focus:shadow-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600 disabled:cursor-not-allowed"
+    aria-labelledby={labelledBy}
+    aria-describedby={descriptionIds}
     bind:value
     {min}
     {max}
@@ -53,50 +71,5 @@
     {disabled}
     onblur={normalizeValue}
   />
-  <span id={`${id}-unit`} class="unit">{unit}</span>
+  <span id={`${id}-unit`} class="whitespace-nowrap text-sm text-gray-600">{unit}</span>
 </div>
-
-<style>
-  .number-input {
-    display: inline-flex;
-    align-items: baseline;
-    gap: 0.5rem;
-    min-inline-size: 0;
-
-    &.is-disabled {
-      opacity: 0.55;
-    }
-
-    input {
-      inline-size: 7rem;
-      min-inline-size: 0;
-      padding: 0.25rem 0.375rem;
-      border: 0;
-      border-block-end: 2px solid rgb(156 163 175 / 50%);
-      color: inherit;
-      background: transparent;
-      transition: border-color 150ms ease;
-
-      &:focus {
-        border-block-end-color: black;
-        outline: none;
-        box-shadow: none;
-      }
-
-      &:focus-visible {
-        outline: 2px solid rgb(37 99 235);
-        outline-offset: 2px;
-      }
-
-      &:disabled {
-        cursor: not-allowed;
-      }
-    }
-  }
-
-  .unit {
-    color: rgb(75 85 99);
-    font-size: 0.875rem;
-    white-space: nowrap;
-  }
-</style>

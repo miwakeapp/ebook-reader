@@ -10,7 +10,7 @@
   import { logger } from '$lib/data/logger';
   import { appShortcuts } from '$lib/data/app-shortcuts.svelte';
   import type { TextMarginMode } from '$lib/data/text-margin-mode';
-  import { customReadingPointEnabled$, disableWheelNavigation$, userFonts$ } from '$lib/data/store';
+  import { disableWheelNavigation$, userFonts$ } from '$lib/data/store';
   import { getReferencePoints } from '$lib/functions/range-util';
   import { faBookmark, faSpinner } from '@fortawesome/free-solid-svg-icons';
   import { onDestroy, onMount, untrack } from 'svelte';
@@ -239,9 +239,9 @@
     return readerController.registerPageManager(pageManager);
   });
 
-  // Update custom reading point position
+  // Update reading marker position
   $effect(() => {
-    if ($customReadingPointEnabled$ && contentEl && Number.isFinite(customReadingPoint)) {
+    if (contentEl && Number.isFinite(customReadingPoint)) {
       updateCustomReadingPointPosition();
       onScroll();
       updateSectionProgress();
@@ -326,7 +326,7 @@
   }
 
   function updateCustomReadingPointPosition() {
-    if (!$customReadingPointEnabled$ || !contentEl) {
+    if (!contentEl) {
       return;
     }
 

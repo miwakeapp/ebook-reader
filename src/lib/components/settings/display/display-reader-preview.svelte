@@ -24,6 +24,12 @@
   import { setupSpoilerImageListeners } from '$lib/components/book-reader/book-content-enhancement';
   import { displayTitle } from '$lib/functions/book-title';
 
+  interface Props {
+    class?: string;
+  }
+
+  let { class: className }: Props = $props();
+
   const previewBookTitle = '余白のリズム【電子限定短編付き】（白波文庫）';
 
   let previewText: HTMLDivElement | undefined = $state();
@@ -57,7 +63,7 @@
   });
 </script>
 
-<aside class="preview-shell" aria-label="Live reader preview">
+<aside class={['preview-shell', className]} aria-label="Live reader preview">
   <div class="preview-heading">
     <p>{previewBookDisplayTitle}</p>
     <span>Preview</span>

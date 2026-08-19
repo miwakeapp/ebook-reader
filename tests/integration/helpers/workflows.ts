@@ -19,7 +19,6 @@ interface ReaderSettings {
   autoBookmarkTime?: string;
   blurImages?: string;
   closeConfirmation?: string;
-  customReadingPoint?: string;
   fontSize?: string;
   fontVPAL?: string;
   furigana?: string;
@@ -103,7 +102,6 @@ export async function useReaderSettings(page: Page, settings: ReaderSettings) {
     settings.autoBookmark,
     settings.autoBookmarkTime,
     settings.closeConfirmation,
-    settings.customReadingPoint,
     settings.readerMaxWidth,
     settings.savePositionOnExit,
     settings.showFooterChapterCharacters,
@@ -119,8 +117,18 @@ export async function useReaderSettings(page: Page, settings: ReaderSettings) {
       await selectSettingsRadio(page, 'Reading flow', mapReadingFlow(settings.viewMode));
     }
     if (settings.readerMaxWidth) {
-      await selectSettingsRadio(page, 'Maximum line length', 'Custom');
-      await fillSettingsNumber(page, 'Custom maximum', settings.readerMaxWidth);
+      const readingAreaSize = page.getByRole('group', {
+        name: /Maximum reading area (?:width|height)/
+      });
+      const customSize = readingAreaSize.getByRole('radio', { name: 'Custom', exact: true });
+      if (!(await customSize.isChecked())) {
+        await customSize.locator('xpath=ancestor::label[1]').click();
+      }
+      await expect(customSize).toBeChecked();
+
+      const sizeInput = readingAreaSize.getByRole('spinbutton');
+      await sizeInput.fill(settings.readerMaxWidth);
+      await sizeInput.blur();
     }
     if (settings.tapToFlip) {
       await setSettingsSwitch(
@@ -158,13 +166,6 @@ export async function useReaderSettings(page: Page, settings: ReaderSettings) {
     }
     if (settings.showFooterChapterPercentage) {
       await setProgressFooterField(page, 3, settingValueIsOn(settings.showFooterChapterPercentage));
-    }
-    if (settings.customReadingPoint) {
-      await setSettingsSwitch(
-        page,
-        'Use a fixed reading marker',
-        settingValueIsOn(settings.customReadingPoint)
-      );
     }
   }
 
@@ -235,18 +236,21 @@ export async function enableStatistics(page: Page) {
   await expect(trackingSwitch).toBeChecked({ timeout: SYNC_ASSERTION_TIMEOUT });
 }
 
-async function selectSettingsRadio(page: Page, groupName: string, optionName: string) {
+async function selectSettingsRadio(page: Page, groupName: string | RegExp, optionName: string) {
   const input = page
-    .getByRole('group', { name: groupName, exact: true })
-    .getByLabel(optionName, { exact: false });
+    .getByRole('group', { name: groupName, exact: typeof groupName === 'string' })
+    .getByRole('radio', { name: optionName, exact: true });
   if (!(await input.isChecked())) {
     await input.locator('xpath=ancestor::label[1]').click();
   }
   await expect(input).toBeChecked();
 }
 
-async function fillSettingsNumber(page: Page, label: string, value: string) {
-  const input = page.getByLabel(label, { exact: false });
+async function fillSettingsNumber(page: Page, label: string | RegExp, value: string) {
+  const input = page.getByRole('spinbutton', {
+    name: label,
+    exact: typeof label === 'string' ? false : undefined
+  });
   await input.fill(value);
   await input.blur();
 }

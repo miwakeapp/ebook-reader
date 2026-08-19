@@ -1,4 +1,6 @@
-<script lang="ts" generics="T extends string">
+<script lang="ts" generics="T">
+  import type { Snippet } from 'svelte';
+
   interface Option {
     id: T;
     label: string;
@@ -11,10 +13,10 @@
     labelledBy?: string;
     id?: string;
     description?: string;
-    name: string;
     options: Option[];
     value: T;
     disabled?: boolean;
+    optionControl?: Snippet<[T, { labelledBy: string }]>;
   }
 
   let {
@@ -22,42 +24,61 @@
     labelledBy,
     id,
     description,
-    name,
     options,
     value = $bindable(),
-    disabled = false
+    disabled = false,
+    optionControl
   }: Props = $props();
 
   const componentId = $props.id();
+  const legendId = `${componentId}-legend`;
   const descriptionId = `${componentId}-description`;
+
+  function getOptionControlLabelledBy(optionLabelId: string) {
+    return [legend ? legendId : labelledBy, optionLabelId]
+      .filter((labelId) => labelId !== undefined)
+      .join(' ');
+  }
 </script>
 
-<div class="settings-radio-group" class:is-disabled={disabled} data-settings-item>
-  <fieldset
-    {id}
-    class="radio-fieldset"
-    {disabled}
-    aria-labelledby={labelledBy}
-    aria-describedby={description ? descriptionId : undefined}
-  >
-    {#if legend}
-      <legend class="mb-1 font-medium">{legend}</legend>
-    {/if}
-    {#if description}
-      <p id={descriptionId} class="mb-2 text-sm text-gray-600">{description}</p>
-    {/if}
+<fieldset
+  {id}
+  class="m-0 min-w-0 border-0 p-0"
+  {disabled}
+  aria-labelledby={labelledBy}
+  aria-describedby={description ? descriptionId : undefined}
+>
+  {#if legend}
+    <legend id={legendId} class="mb-1 font-medium">{legend}</legend>
+  {/if}
+  {#if description}
+    <p id={descriptionId} class="mb-2 text-sm text-gray-600">{description}</p>
+  {/if}
 
-    <div class="radio-options">
-      {#each options as option, index (option.id)}
-        {@const optionId = `${componentId}-option-${index}`}
-        {@const optionLabelId = `${optionId}-label`}
-        {@const optionDescriptionId = `${optionId}-description`}
-        <label for={optionId} class="radio-option">
+  <div class="grid gap-1">
+    {#each options as option, index (option.id)}
+      {@const optionId = `${componentId}-option-${index}`}
+      {@const optionLabelId = `${optionId}-label`}
+      {@const optionDescriptionId = `${optionId}-description`}
+      <div
+        class={[
+          'grid grid-cols-[auto_minmax(0,1fr)_auto] items-start gap-x-3 gap-y-2 rounded p-1',
+          disabled ? 'cursor-not-allowed' : 'hover:bg-gray-400/15'
+        ]}
+      >
+        <label
+          for={optionId}
+          class={[
+            'col-span-2 grid min-w-0 grid-cols-subgrid items-start',
+            disabled ? 'cursor-not-allowed' : 'cursor-pointer'
+          ]}
+        >
           <input
             id={optionId}
             type="radio"
-            {name}
+            name={componentId}
             value={option.id}
+            class="mt-1 shrink-0 accent-blue-600"
             bind:group={value}
             aria-labelledby={optionLabelId}
             aria-describedby={option.description ? optionDescriptionId : undefined}
@@ -76,52 +97,16 @@
             {/if}
           </span>
         </label>
-      {/each}
-    </div>
-  </fieldset>
-</div>
-
-<style>
-  .settings-radio-group {
-    padding-block: 0.875rem;
-    border-block-end: 1px solid rgb(156 163 175 / 40%);
-
-    &.is-disabled {
-      opacity: 0.55;
-    }
-  }
-
-  .radio-fieldset {
-    min-inline-size: 0;
-    margin: 0;
-    padding: 0;
-    border: 0;
-  }
-
-  .radio-options {
-    display: grid;
-    gap: 0.25rem;
-  }
-
-  .radio-option {
-    display: flex;
-    align-items: flex-start;
-    gap: 0.75rem;
-    padding: 0.25rem;
-    border-radius: 0.25rem;
-
-    &:not(:has(input:disabled)):hover {
-      background: rgb(156 163 175 / 15%);
-    }
-
-    &:has(input:disabled) {
-      cursor: not-allowed;
-    }
-
-    input {
-      flex: none;
-      margin-block-start: 0.25rem;
-      accent-color: rgb(37 99 235);
-    }
-  }
-</style>
+        {#if optionControl}
+          <div
+            class="min-w-0 justify-self-end max-[30rem]:col-start-2 max-[30rem]:justify-self-start"
+          >
+            {@render optionControl(option.id, {
+              labelledBy: getOptionControlLabelledBy(optionLabelId)
+            })}
+          </div>
+        {/if}
+      </div>
+    {/each}
+  </div>
+</fieldset>

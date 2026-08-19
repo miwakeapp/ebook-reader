@@ -145,7 +145,7 @@ test('mobile library selection and reader actions use labeled overflow menus', a
   await expect(visibleControl(readerToolbar, 'Complete Book')).toBeVisible();
   await expect(visibleControl(readerToolbar, 'Fullscreen')).toBeVisible();
   await expect(visibleControl(readerToolbar, 'Jump to Character')).toBeVisible();
-  await expect(visibleControl(readerToolbar, 'Set Point')).toBeVisible();
+  await expect(visibleControl(readerToolbar, 'Set current reading position')).toBeVisible();
 });
 
 test('mobile navigation is unavailable while a library operation is in progress', async ({

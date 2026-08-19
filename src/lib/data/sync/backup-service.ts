@@ -62,7 +62,9 @@ export async function buildCurrentCatalog(): Promise<BackupCatalog> {
     .sort(byTitle);
 
   return {
-    hasAppSettings: localStorage.length > 0,
+    // Persistent preference stores serialize their effective defaults too, so a fresh profile has
+    // meaningful app settings to export even before anything has been written to localStorage.
+    hasAppSettings: [...localStoragePreferences.keys()].some(isAppSetting),
     // localStorage.getItem catches "user has ever interacted with goals";
     // lastReadingGoalsModified$ is a sync-marker timestamp, not a
     // presence signal.

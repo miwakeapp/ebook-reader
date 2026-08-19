@@ -6,29 +6,15 @@
   import { availableThemes } from '$lib/data/theme-option';
   import Fa from 'svelte-fa';
 
-  function displayName(id: string) {
-    return id
-      .replace(/-theme$/, '')
-      .replaceAll('-', ' ')
-      .replace(/(^|\s)\S/g, (character) => character.toUpperCase());
-  }
+  let themeEntries = $derived([
+    ...availableThemes.entries(),
+    ...(browser ? Object.entries($customThemes$) : [])
+  ]);
 
-  let themes = $derived.by(() => {
-    const choices = [...availableThemes.entries()];
-
-    if (browser) {
-      choices.push(...Object.entries($customThemes$));
-    }
-
-    return choices.map(([id, option]) => ({
-      id,
-      option,
-      label: displayName(id),
-      custom: !availableThemes.has(id)
-    }));
-  });
-
-  let editorThemes = $derived(themes.map(({ id, label }) => ({ id, text: label })));
+  const themeButtonClasses =
+    'min-h-19 w-full rounded-lg border bg-white text-black focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600';
+  const themeActionButtonClasses =
+    'grid size-7 place-items-center rounded-full bg-white/90 text-xs text-black hover:bg-white focus-visible:outline-2 focus-visible:outline-blue-600';
 
   function removeTheme(id: string) {
     const nextThemes = { ...$customThemes$ };
@@ -41,40 +27,46 @@
   }
 </script>
 
-<div class="theme-grid">
-  {#each themes as theme (theme.id)}
-    <div class="theme-choice">
+<div class="grid grid-cols-[repeat(auto-fill,minmax(7.5rem,1fr))] gap-3">
+  {#each themeEntries as [id, option] (id)}
+    <div class="relative min-w-0">
       <button
         type="button"
-        class="swatch"
-        class:selected={$theme$ === theme.id}
-        aria-pressed={$theme$ === theme.id}
-        aria-label={`${theme.label} reading colors`}
-        onclick={() => ($theme$ = theme.id)}
+        class={[
+          themeButtonClasses,
+          'flex flex-col overflow-hidden p-0',
+          $theme$ === id
+            ? 'border-blue-500 ring-2 ring-blue-200'
+            : 'border-gray-300 hover:border-gray-500'
+        ]}
+        aria-pressed={$theme$ === id}
+        aria-label={`${id} reading colors`}
+        onclick={() => ($theme$ = id)}
       >
         <span
-          class="sample"
+          class="grid min-h-11 place-items-center text-lg"
           lang="ja"
-          style:color={theme.option.fontColor}
-          style:background-color={theme.option.backgroundColor}>ぁあ</span
+          style:color={option.fontColor}
+          style:background-color={option.backgroundColor}>ぁあ</span
         >
-        <span class="label">{theme.label}</span>
+        <span class="truncate px-2 py-1.5 text-xs">{id}</span>
       </button>
 
-      {#if theme.custom}
-        <div class="theme-actions" aria-label={`${theme.label} actions`}>
+      {#if !availableThemes.has(id)}
+        <div class="absolute top-1 right-1 flex gap-0.5">
           <button
             type="button"
-            aria-label={`Edit ${theme.label}`}
-            onclick={() =>
-              showThemeEditorDialog({ selectedTheme: theme.id, existingThemes: editorThemes })}
+            class={themeActionButtonClasses}
+            aria-label={`Edit ${id}`}
+            onclick={() => showThemeEditorDialog({ selectedTheme: id })}
           >
             <Fa icon={faPen} />
           </button>
           <button
             type="button"
-            aria-label={`Delete ${theme.label}`}
-            onclick={() => removeTheme(theme.id)}
+            class={themeActionButtonClasses}
+            aria-label={`Delete ${id}`}
+            onclick={() => removeTheme(id)}
           >
             <Fa icon={faTrash} />
           </button>
@@ -83,109 +75,15 @@
     </div>
   {/each}
 
-  {#if browser}
-    <button
-      type="button"
-      class="new-theme"
-      onclick={() => showThemeEditorDialog({ existingThemes: editorThemes })}
-    >
-      <Fa icon={faPlus} />
-      <span>New theme</span>
-    </button>
-  {/if}
+  <button
+    type="button"
+    class={[
+      themeButtonClasses,
+      'flex items-center justify-center gap-2 border-gray-300 border-dashed text-sm hover:border-gray-500'
+    ]}
+    onclick={() => showThemeEditorDialog()}
+  >
+    <Fa icon={faPlus} />
+    <span>New theme</span>
+  </button>
 </div>
-
-<style>
-  .theme-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(7.5rem, 1fr));
-    gap: 0.75rem;
-  }
-
-  .theme-choice {
-    position: relative;
-    min-width: 0;
-  }
-
-  .swatch,
-  .new-theme {
-    width: 100%;
-    min-height: 4.75rem;
-    border: 1px solid var(--color-gray-300);
-    border-radius: 0.5rem;
-    background: white;
-    color: black;
-
-    &:hover {
-      border-color: var(--color-gray-500);
-    }
-
-    &:focus-visible {
-      outline: 2px solid var(--color-blue-500);
-      outline-offset: 2px;
-    }
-  }
-
-  .swatch {
-    display: grid;
-    grid-template-rows: 1fr auto;
-    overflow: hidden;
-    padding: 0;
-
-    &.selected {
-      border-color: var(--color-blue-500);
-      box-shadow: 0 0 0 2px var(--color-blue-200);
-    }
-  }
-
-  .sample {
-    display: grid;
-    min-height: 2.75rem;
-    place-items: center;
-    font-size: 1.125rem;
-  }
-
-  .label {
-    overflow: hidden;
-    padding: 0.35rem 0.5rem;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-    font-size: 0.75rem;
-  }
-
-  .theme-actions {
-    position: absolute;
-    top: 0.25rem;
-    right: 0.25rem;
-    display: flex;
-    gap: 0.125rem;
-
-    button {
-      display: grid;
-      width: 1.75rem;
-      height: 1.75rem;
-      place-items: center;
-      border-radius: 999px;
-      background: rgb(255 255 255 / 88%);
-      color: black;
-      font-size: 0.75rem;
-
-      &:hover {
-        background: white;
-      }
-
-      &:focus-visible {
-        outline: 2px solid var(--color-blue-500);
-      }
-    }
-  }
-
-  .new-theme {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 0.5rem;
-    border-style: dashed;
-    font-size: 0.875rem;
-  }
-</style>
