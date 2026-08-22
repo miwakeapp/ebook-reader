@@ -246,9 +246,7 @@
 
 <div class="mb-8 sm:col-span-2 lg:col-span-3">
   <div class="flex grow">
-    <h1 class="mb-2 text-xl font-medium w-full">
-      <span class="capitalize">Reading Goals</span>
-    </h1>
+    <h1 class="mb-2 w-full text-xl font-medium">Reading goals</h1>
     {#if isInEditMode}
       <button class={`${buttonClasses} mr-4`} disabled={saveDisabled} onclick={saveReadingGoal}>
         <div
@@ -347,7 +345,7 @@
     </label>
   </div>
   <details class="mt-6 cursor-pointer">
-    <summary>Reading Goal History ({pluralize(readingGoals.length, 'Item')})</summary>
+    <summary>Reading goal history ({pluralize(readingGoals.length, 'item')})</summary>
     {#if readingGoals.length}
       <div class="grid-cols-[repeat(4,1fr)_0.1fr] hidden sm:grid">
         {#each historyReadingGoals as historyGoal (historyGoal.goalStartDate)}

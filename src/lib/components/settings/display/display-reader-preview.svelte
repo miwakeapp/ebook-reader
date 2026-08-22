@@ -149,7 +149,7 @@
 
     @media (width >= 64rem) {
       position: sticky;
-      top: 5rem;
+      top: 8rem;
     }
   }
 

@@ -1,6 +1,7 @@
 <script lang="ts">
   import SettingsItem from '$lib/components/settings/settings-item.svelte';
   import SettingsNumberInput from '$lib/components/settings/settings-number-input.svelte';
+  import type { SettingsApplicabilityDetails } from '$lib/components/settings/settings-applicability.svelte';
 
   interface Props {
     id?: string;
@@ -11,6 +12,7 @@
     min?: number;
     max?: number;
     step?: number;
+    applicability?: SettingsApplicabilityDetails;
     disabled?: boolean;
     inset?: boolean;
   }
@@ -24,6 +26,7 @@
     min,
     max,
     step,
+    applicability,
     disabled = false,
     inset = false
   }: Props = $props();
@@ -32,7 +35,7 @@
   const controlId = $derived(id ?? `${componentId}-control`);
 </script>
 
-<SettingsItem {label} {description} {controlId} {disabled} {inset}>
+<SettingsItem {label} {description} {controlId} {applicability} {disabled} {inset}>
   {#snippet control()}
     <SettingsNumberInput
       id={controlId}
@@ -43,7 +46,12 @@
       {step}
       {disabled}
       labelledBy={`${controlId}-label`}
-      describedBy={description ? `${controlId}-description` : undefined}
+      describedBy={[
+        description ? `${controlId}-description` : undefined,
+        applicability ? `${controlId}-applicability` : undefined
+      ]
+        .filter((descriptionId) => descriptionId !== undefined)
+        .join(' ') || undefined}
     />
   {/snippet}
 </SettingsItem>

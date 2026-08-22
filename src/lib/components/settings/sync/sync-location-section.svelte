@@ -214,7 +214,7 @@
         {#snippet main()}
           <div class="font-medium">Google Drive</div>
           <div class="mt-1 text-sm text-gray-600">
-            Sync to a folder in your Google Drive account.
+            Syncs to a folder in your Google Drive account.
           </div>
           <div class="mt-1.5 flex flex-wrap items-center gap-2 text-xs text-gray-600">
             <span
@@ -243,7 +243,7 @@
         {#snippet main()}
           <div class="font-medium">OneDrive</div>
           <div class="mt-1 text-sm text-gray-600">
-            Sync to a folder in your Microsoft OneDrive account.
+            Syncs to a folder in your Microsoft OneDrive account.
           </div>
           <div class="mt-1.5 flex flex-wrap items-center gap-2 text-xs text-gray-600">
             <span
@@ -273,8 +273,8 @@
           {#snippet main()}
             <div class="font-medium">Sync folder</div>
             <div class="mt-1 text-sm text-gray-600">
-              Mirror your library to a folder on this device. Pair with your own sync tool
-              (Syncthing, Dropbox, etc.) for cross-device coverage.
+              Mirrors your library to a folder on this device. Works with your own sync tool, such
+              as Syncthing or Dropbox, for cross-device coverage.
             </div>
           {/snippet}
           {#snippet actions()}

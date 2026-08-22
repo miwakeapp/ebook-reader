@@ -1,6 +1,7 @@
 <script lang="ts" generics="T">
   import SettingsItem from '$lib/components/settings/settings-item.svelte';
   import SettingsRadioGroup from '$lib/components/settings/settings-radio-group.svelte';
+  import type { SettingsApplicabilityDetails } from '$lib/components/settings/settings-applicability.svelte';
   import type { Snippet } from 'svelte';
 
   interface Option {
@@ -17,6 +18,7 @@
     description?: string;
     options: Option[];
     value: T;
+    applicability?: SettingsApplicabilityDetails;
     disabled?: boolean;
     inset?: boolean;
     optionControl?: Snippet<[T, { labelledBy: string }]>;
@@ -29,6 +31,7 @@
     description,
     options,
     value = $bindable(),
+    applicability,
     disabled = false,
     inset = false,
     optionControl
@@ -42,6 +45,7 @@
     {id}
     {description}
     {options}
+    {applicability}
     bind:value
     {disabled}
     {optionControl}

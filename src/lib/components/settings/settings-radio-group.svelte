@@ -1,4 +1,6 @@
 <script lang="ts" generics="T">
+  import SettingsApplicability from '$lib/components/settings/settings-applicability.svelte';
+  import type { SettingsApplicabilityDetails } from '$lib/components/settings/settings-applicability.svelte';
   import type { Snippet } from 'svelte';
 
   interface Option {
@@ -15,6 +17,7 @@
     description?: string;
     options: Option[];
     value: T;
+    applicability?: SettingsApplicabilityDetails;
     disabled?: boolean;
     optionControl?: Snippet<[T, { labelledBy: string }]>;
   }
@@ -26,6 +29,7 @@
     description,
     options,
     value = $bindable(),
+    applicability,
     disabled = false,
     optionControl
   }: Props = $props();
@@ -49,7 +53,12 @@
   aria-describedby={description ? descriptionId : undefined}
 >
   {#if legend}
-    <legend id={legendId} class="mb-1 font-medium">{legend}</legend>
+    <legend id={legendId} class="mb-1">
+      <span class="flex flex-wrap items-baseline gap-x-2 gap-y-0.5">
+        <span class="font-medium">{legend}</span>
+        {#if applicability}<SettingsApplicability {...applicability} />{/if}
+      </span>
+    </legend>
   {/if}
   {#if description}
     <p id={descriptionId} class="mb-2 text-sm text-gray-600">{description}</p>

@@ -56,13 +56,13 @@
       id: ImportHTMLFixMode.STANDARD,
       label: 'Standard',
       description:
-        'Fixes common malformed-HTML issues during EPUB import (e.g. wrong self-closing elements). Try this if a book looks broken in the reader.'
+        'Fixes common malformed-HTML issues during EPUB import, such as incorrect self-closing elements. This can help when a book looks broken in the reader.'
     },
     {
       id: ImportHTMLFixMode.EXTENDED,
       label: 'Extended',
       description:
-        'Standard fixes plus more aggressive cleanups (control characters, HTML entities). Use only if Standard didn’t fix it.'
+        'Includes Standard fixes plus more aggressive cleanup of control characters and HTML entities. It is intended for books that remain broken after Standard.'
     }
   ];
 
@@ -76,12 +76,12 @@
     {
       id: AutoReplicationType.Up,
       label: 'Up only',
-      description: `Push changes from this device to ${locationLabel}, but don't pull changes from there. Useful if this device is the canonical source.`
+      description: `Pushes changes from this device to ${locationLabel}, but does not pull changes from there. This is useful if this device is the canonical source.`
     },
     {
       id: AutoReplicationType.Down,
       label: 'Down only',
-      description: `Pull changes from ${locationLabel}, but don't push. Useful for read-only devices.`
+      description: `Pulls changes from ${locationLabel}, but does not push. This is useful for read-only devices.`
     },
     {
       id: AutoReplicationType.Off,
@@ -148,7 +148,7 @@
 
   <SettingsSwitchItem
     label="Cache remote file list"
-    description="Remember the remote file list for the rest of this session to save network traffic. Changes from other devices will not appear until you reload the page or open a new tab."
+    description="Remembers the remote file list for the rest of this session to save network traffic. Changes from other devices will not appear until you reload the page or open a new tab."
     bind:checked={$cacheStorageData$}
   />
 
@@ -161,7 +161,7 @@
   {#if $importHTMLFixMode$ !== ImportHTMLFixMode.OFF}
     <SettingsSwitchItem
       label="Restrict self-closing-tag fixes to links"
-      description="Only fix anchor tags, leaving other elements as the EPUB had them. Try this if Standard or Extended is over-correcting."
+      description="Fixes only anchor tags, leaving other elements as the EPUB had them. This can help when Standard or Extended over-corrects."
       bind:checked={$restrictImportFixToAnchor$}
       inset
     />

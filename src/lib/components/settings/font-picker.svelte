@@ -188,7 +188,7 @@
 </script>
 
 <div>
-  <div id={labelId} class="mb-2 font-medium capitalize">{fontGroupLabels[group]}</div>
+  <div id={labelId} class="mb-2 font-medium">{fontGroupLabels[group]}</div>
   <button
     use:ripple
     type="button"

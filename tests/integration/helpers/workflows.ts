@@ -118,7 +118,7 @@ export async function useReaderSettings(page: Page, settings: ReaderSettings) {
     }
     if (settings.readerMaxWidth) {
       const readingAreaSize = page.getByRole('group', {
-        name: /Maximum reading area (?:width|height)/
+        name: 'Maximum reading area'
       });
       const customSize = readingAreaSize.getByRole('radio', { name: 'Custom', exact: true });
       if (!(await customSize.isChecked())) {

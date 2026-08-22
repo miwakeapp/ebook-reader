@@ -112,20 +112,20 @@
   let items: Item[] = $derived([
     {
       title: 'Export backup to ZIP',
-      description: 'Save selected books, bookmarks, statistics, and settings to a ZIP file.',
+      description: 'Saves selected books, bookmarks, statistics, and settings to a ZIP file.',
       action: 'Export',
       onclick: onExport
     },
     {
       title: 'Import backup from ZIP',
-      description: 'Restore from a previously exported backup file.',
+      description: 'Restores from a previously exported backup file.',
       action: 'Import',
       onclick: onImport
     },
     {
       title: 'Force full re-sync',
       description:
-        'Walk every file in your library to ensure there are no differences between your sync location and this device. Useful if you suspect something drifted.',
+        'Checks every file in your library for differences between your sync location and this device. This is useful if you suspect something drifted.',
       action: syncState.isSyncing
         ? 'Syncing…'
         : syncState.isSyncPending
@@ -137,7 +137,7 @@
     {
       title: 'Sign out and wipe local data',
       description:
-        'Disconnect your sync location and delete everything from this device. Your data stored elsewhere is unchanged.',
+        'Disconnects your sync location and deletes everything from this device. Your data stored elsewhere is unchanged.',
       action: 'Sign out and wipe',
       variant: 'danger',
       danger: true,

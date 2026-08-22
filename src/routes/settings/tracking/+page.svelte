@@ -35,31 +35,31 @@
     {
       id: 'manual' as const,
       label: 'Manually',
-      description: 'Start each reading session from the tracker in the reader.',
+      description: 'Tracking starts only when you use the tracker in the reader.',
       isDefault: true
     },
     {
       id: 'automatic' as const,
       label: 'Automatically',
-      description: 'Start after your reading position has settled for a short delay.'
+      description: 'Tracking starts after your reading position has settled for a short delay.'
     }
   ];
   const trackerAutoPauseOptions = [
     {
       id: TrackerAutoPause.OFF,
       label: 'Only for reader events',
-      description: 'Pause only when the reader itself knows that reading has stopped.'
+      description: 'Pauses only when the reader itself knows that reading has stopped.'
     },
     {
       id: TrackerAutoPause.MODERATE,
       label: 'When the reader tab loses focus',
-      description: 'Pause when you switch tabs, windows, or apps.',
+      description: 'Pauses when you switch tabs, windows, or apps.',
       isDefault: true
     },
     {
       id: TrackerAutoPause.STRICT,
       label: 'Whenever the site loses focus',
-      description: 'Also pause for popups and other focus changes within the browser.'
+      description: 'Also pauses for popups and other focus changes within the browser.'
     }
   ];
   const completionDateOptions = [
@@ -79,26 +79,26 @@
     {
       id: true,
       label: 'Keep reading data',
-      description: 'Preserve bookmarks and statistics in case you add the book again.',
+      description: 'Preserves bookmarks and statistics in case you add the book again.',
       isDefault: true
     },
     {
       id: false,
       label: 'Delete reading data',
-      description: 'Remove bookmarks and statistics along with the local book copy.'
+      description: 'Removes bookmarks and statistics along with the local book copy.'
     }
   ];
   const thresholdActionOptions = [
     {
       id: TrackerSkipThresholdAction.IGNORE,
       label: 'Ignore the jump',
-      description: 'Do not count the jumped-over characters, then keep tracking.',
+      description: 'Does not count the jumped-over characters, then continues tracking.',
       isDefault: true
     },
     {
       id: TrackerSkipThresholdAction.PAUSE,
       label: 'Pause tracking',
-      description: 'Stop the session so you can check the new position before continuing.'
+      description: 'Stops the session so you can check the new position before continuing.'
     }
   ];
   const dayBoundaryOptions = Array.from({ length: 24 }, (_, hour) => ({
@@ -230,7 +230,7 @@
 <SettingsSection title="Reading activity">
   <SettingsSwitchItem
     label="Track reading activity"
-    description="Show the tracker in the reader and record reading time, characters, and speed."
+    description="Shows the tracker in the reader and records reading time, characters, and speed."
     bind:checked={$statisticsEnabled$}
   />
 </SettingsSection>
@@ -261,7 +261,7 @@
 
   <SettingsRadioItem
     legend="Pause tracking"
-    description="Choose how readily focus changes pause an active session."
+    description="Controls how readily focus changes pause an active session."
     options={trackerAutoPauseOptions}
     bind:value={$trackerAutoPause$}
     disabled={!$statisticsEnabled$}
@@ -269,7 +269,7 @@
   {#if $trackerAutoPause$ !== TrackerAutoPause.OFF}
     <SettingsSwitchItem
       label="Keep tracking during supported dictionary lookups"
-      description="Do not pause when a Yomitan or jpdb Browser Reader lookup is detected. Yomitan requires Secure Container to be off."
+      description="Prevents supported Yomitan or jpdb Browser Reader lookups from pausing the session. Yomitan requires Secure Container to be off."
       bind:checked={$trackerPopupDetection$}
       disabled={!$statisticsEnabled$}
       inset
@@ -278,7 +278,7 @@
 
   <SettingsSwitchItem
     label="Pause after no page activity"
-    description="Automatically pause a session when you stop turning pages or scrolling."
+    description="Automatically pauses a session when you stop turning pages or scrolling."
     bind:checked={idlePauseEnabled}
     disabled={!$statisticsEnabled$}
   />
@@ -296,7 +296,7 @@
     />
     <SettingsSwitchItem
       label="Remove idle time from the session"
-      description="Subtract the idle period when the tracker pauses automatically."
+      description="Subtracts the idle period when the tracker pauses automatically."
       bind:checked={$adjustStatisticsAfterIdleTime$}
       disabled={!$statisticsEnabled$}
       inset
@@ -307,13 +307,13 @@
 <SettingsSection title="Completing a book">
   <SettingsSwitchItem
     label="Open the tracker on completion"
-    description="Show the current session when you mark a book complete."
+    description="Shows the current session when you mark a book complete."
     bind:checked={$openTrackerOnCompletion$}
     disabled={!$statisticsEnabled$}
   />
   <SettingsSwitchItem
     label="Count unread characters on completion"
-    description="Add the characters between your current position and the end of the book."
+    description="Adds the characters between your current position and the end of the book."
     bind:checked={$addCharactersOnCompletion$}
     disabled={!$statisticsEnabled$}
   />
@@ -360,7 +360,7 @@
   />
   <SettingsItem
     label="Delete data left by books already removed"
-    description="Permanently remove orphaned bookmarks and statistics without affecting books still in your library."
+    description="Permanently removes orphaned bookmarks and statistics without affecting books still in your library."
   >
     {#snippet control()}
       <button
@@ -383,7 +383,7 @@
 >
   <SettingsSwitchItem
     label="Detect large forward jumps"
-    description="Treat moving forward by more than a set number of characters as a skip."
+    description="Treats moving forward by more than a set number of characters as a skip."
     bind:checked={forwardThresholdEnabled}
     disabled={!$statisticsEnabled$}
   />
@@ -400,7 +400,7 @@
   {/if}
   <SettingsSwitchItem
     label="Detect large backward jumps"
-    description="Treat moving backward by more than a set number of characters as a skip."
+    description="Treats moving backward by more than a set number of characters as a skip."
     bind:checked={backwardThresholdEnabled}
     disabled={!$statisticsEnabled$}
   />

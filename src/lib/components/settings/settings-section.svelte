@@ -51,12 +51,12 @@
           icon={faChevronRight}
           class="text-sm text-gray-500 transition-transform duration-150 group-open:rotate-90"
         />
-        <h2 id={titleId} class="text-xl font-medium capitalize">{title}</h2>
+        <h2 id={titleId} class="text-xl font-medium">{title}</h2>
       </summary>
       {@render sectionContents()}
     </details>
   {:else}
-    <h2 id={titleId} class="border-b border-black pb-1 text-xl font-medium capitalize">
+    <h2 id={titleId} class="border-b border-black pb-1 text-xl font-medium">
       {title}
     </h2>
     {@render sectionContents()}

@@ -1,4 +1,7 @@
 <script lang="ts">
+  import SettingsApplicability, {
+    type SettingsApplicabilityDetails
+  } from '$lib/components/settings/settings-applicability.svelte';
   import type { Snippet } from 'svelte';
 
   interface Props {
@@ -8,6 +11,7 @@
     controlId?: string;
     control?: Snippet;
     children?: Snippet;
+    applicability?: SettingsApplicabilityDetails;
     disabled?: boolean;
     inset?: boolean;
   }
@@ -19,6 +23,7 @@
     controlId,
     control,
     children,
+    applicability,
     disabled = false,
     inset = false
   }: Props = $props();
@@ -42,7 +47,12 @@
           for={controlId}
           class={['block min-w-0', disabled ? 'cursor-not-allowed' : 'cursor-pointer']}
         >
-          <span id={`${controlId}-label`} class="block font-medium">{label}</span>
+          <span class="flex flex-wrap items-baseline gap-x-2 gap-y-0.5">
+            <span id={`${controlId}-label`} class="font-medium">{label}</span>
+            {#if applicability}
+              <SettingsApplicability id={`${controlId}-applicability`} {...applicability} />
+            {/if}
+          </span>
           {#if description}
             <span id={`${controlId}-description`} class="mt-0.5 block text-sm text-gray-600">
               {description}
@@ -51,7 +61,10 @@
         </label>
       {:else}
         <div class="min-w-0">
-          <div class="font-medium">{label}</div>
+          <div class="flex flex-wrap items-baseline gap-x-2 gap-y-0.5">
+            <div class="font-medium">{label}</div>
+            {#if applicability}<SettingsApplicability {...applicability} />{/if}
+          </div>
           {#if description}
             <div class="mt-0.5 text-sm text-gray-600">{description}</div>
           {/if}

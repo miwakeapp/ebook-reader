@@ -29,11 +29,14 @@ test('switch labels toggle their controls and reading settings fit on mobile', a
   await navigateToSettingsReading(page);
 
   const tapEdges = page.getByRole('switch', { name: 'Tap page edges to turn pages' });
+  await expect(tapEdges).toHaveAccessibleDescription(
+    'Reserves a small area on either edge for page turning. Applies only when reading flow is set to Pages.'
+  );
   const initiallyChecked = await tapEdges.isChecked();
   await page.getByText('Tap page edges to turn pages', { exact: true }).click();
   await expect(tapEdges).toBeChecked({ checked: !initiallyChecked });
   await page
-    .getByText('Reserve a small area on either edge for page turning.', { exact: true })
+    .getByText('Reserves a small area on either edge for page turning.', { exact: true })
     .click();
   await expect(tapEdges).toBeChecked({ checked: initiallyChecked });
 
@@ -45,13 +48,19 @@ test('switch labels toggle their controls and reading settings fit on mobile', a
 test('vertical typography preferences remain available in horizontal mode', async ({ page }) => {
   await navigateToSettingsAppearance(page);
 
-  await page.getByText('Horizontal', { exact: true }).click();
+  await page.getByRole('group', { name: 'Text direction' }).getByText('Horizontal').click();
   await page.locator('summary').click();
 
   await expect(
     page.getByRole('group', { name: 'Latin letters and numbers in vertical text' })
   ).toBeVisible();
   await expect(page.getByRole('group', { name: 'Vertical character spacing' })).toBeVisible();
+
+  const verticalApplicability = page.getByTitle(
+    'Applies only when text direction is set to Vertical.'
+  );
+  await expect(verticalApplicability).toHaveCount(2);
+  await expect(verticalApplicability.first()).toHaveCSS('cursor', 'help');
 });
 
 test('choice controls preserve boolean and numeric values', async ({ page }) => {
@@ -61,7 +70,7 @@ test('choice controls preserve boolean and numeric values', async ({ page }) => 
   await bookTitles.getByLabel('Full').check();
   await expect(bookTitles.getByLabel('Full')).toBeChecked();
 
-  await page.getByText('Horizontal', { exact: true }).click();
+  await page.getByRole('group', { name: 'Text direction' }).getByText('Horizontal').click();
   await navigateToSettingsReading(page);
 
   const textColumns = page.getByRole('group', { name: 'Text columns' });
@@ -109,11 +118,59 @@ test('custom layout values stay with their radio options', async ({ page }) => {
   ).toHaveValue('36');
 
   const lineLength = page.getByRole('group', {
-    name: /Maximum reading area (?:width|height)/
+    name: 'Maximum reading area'
   });
   await expect(
     lineLength.getByRole('spinbutton', {
-      name: /Maximum reading area (?:width|height) Custom/
+      name: 'Maximum reading area Custom'
     })
   ).toBeDisabled();
+});
+
+test('reader modes stay available while mode-specific preferences remain configurable', async ({
+  page
+}) => {
+  await navigateToSettingsAppearance(page);
+
+  const appearanceModes = page.locator('[data-reader-mode-settings]');
+  await appearanceModes
+    .getByRole('group', { name: 'Text direction' })
+    .getByText('Horizontal')
+    .click();
+  await appearanceModes.getByRole('group', { name: 'Reading flow' }).getByText('Scroll').click();
+
+  await navigateToSettingsReading(page);
+
+  const readingModes = page.locator('[data-reader-mode-settings]');
+  await expect(
+    readingModes
+      .getByRole('group', { name: 'Text direction' })
+      .getByRole('radio', { name: 'Horizontal' })
+  ).toBeChecked();
+  await expect(
+    readingModes.getByRole('group', { name: 'Reading flow' }).getByRole('radio', { name: 'Scroll' })
+  ).toBeChecked();
+
+  await expect(page.getByRole('group', { name: 'Text columns' })).toBeVisible();
+  await expect(page.getByRole('switch', { name: 'Keep paragraphs on one page' })).toBeVisible();
+  await expect(page.getByRole('switch', { name: 'Turn pages with the mouse wheel' })).toBeVisible();
+  await expect(
+    page.getByRole('switch', { name: 'Anchor bookmarks near selected text' })
+  ).toBeVisible();
+  await expect(
+    page.getByRole('switch', { name: 'Pause tracking while positioning the marker' })
+  ).toBeVisible();
+
+  await readingModes.getByRole('group', { name: 'Text direction' }).getByText('Vertical').click();
+  await readingModes.getByRole('group', { name: 'Reading flow' }).getByText('Pages').click();
+
+  await expect(page.getByRole('group', { name: 'Text columns' })).toBeVisible();
+  await expect(page.getByRole('switch', { name: 'Keep paragraphs on one page' })).toBeVisible();
+  await expect(page.getByRole('switch', { name: 'Turn pages with the mouse wheel' })).toBeVisible();
+  await expect(
+    page.getByRole('switch', { name: 'Anchor bookmarks near selected text' })
+  ).toBeVisible();
+  await expect(
+    page.getByRole('switch', { name: 'Pause tracking while positioning the marker' })
+  ).toBeVisible();
 });

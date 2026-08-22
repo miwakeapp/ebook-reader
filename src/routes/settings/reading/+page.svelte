@@ -1,5 +1,6 @@
 <script lang="ts">
   import { browser } from '$app/environment';
+  import type { SettingsApplicabilityDetails } from '$lib/components/settings/settings-applicability.svelte';
   import SettingsItem from '$lib/components/settings/settings-item.svelte';
   import SettingsNumberInput from '$lib/components/settings/settings-number-input.svelte';
   import SettingsNumberItem from '$lib/components/settings/settings-number-item.svelte';
@@ -15,7 +16,6 @@
     enableReaderWakeLock$,
     enableTapEdgeToFlip$,
     firstDimensionMargin$,
-    horizontalCustomReadingPosition$,
     pageColumns$,
     pauseTrackerOnCustomPointChange$,
     savePositionOnExit$,
@@ -25,48 +25,39 @@
     showFooterChapterCharacterCounter$,
     showFooterChapterPercentage$,
     showPercentage$,
-    statisticsEnabled$,
     swipeThreshold$,
-    verticalCustomReadingPosition$,
-    viewMode$,
-    wheelNavigationEnabled$,
-    writingMode$
+    wheelNavigationEnabled$
   } from '$lib/data/store';
-  import { ViewMode } from '$lib/data/view-mode';
   import { formatPageTitle } from '$lib/functions/format-page-title';
 
   type DimensionMode = 'automatic' | 'custom';
   type LineLengthMode = 'available' | 'custom';
   type SwipeSensitivity = 'high' | 'medium' | 'low';
 
-  const readingFlowOptions = [
-    { id: ViewMode.Paginated, label: 'Pages' },
-    { id: ViewMode.Continuous, label: 'Scroll' }
-  ];
   const pageMarginOptions = [
     {
       id: 'automatic' as const,
       label: 'Automatic',
-      description: 'Let the reader use the available screen space.',
+      description: 'Lets the reader use the available screen space.',
       isDefault: true
     },
     {
       id: 'custom' as const,
       label: 'Custom',
-      description: 'Use the same fixed margin on both sides of the reading area.'
+      description: 'Uses the same fixed margin on both sides of the reading area.'
     }
   ];
   const lineLengthOptions = [
     {
       id: 'available' as const,
       label: 'Fit available space',
-      description: 'Do not limit the reading area.',
+      description: 'Does not limit the reading area.',
       isDefault: true
     },
     {
       id: 'custom' as const,
       label: 'Custom',
-      description: 'Set a fixed maximum; the reader still shrinks on smaller screens.'
+      description: 'Sets a fixed maximum; the reader still shrinks on smaller screens.'
     }
   ];
   const pageColumnOptions = [
@@ -80,6 +71,20 @@
     { id: 'low' as const, label: 'Low' }
   ];
 
+  const horizontalPagesApplicability = {
+    label: 'Horizontal pages',
+    description:
+      'Applies only when text direction is set to Horizontal and reading flow is set to Pages.'
+  } satisfies SettingsApplicabilityDetails;
+  const pagesApplicability = {
+    label: 'Pages',
+    description: 'Applies only when reading flow is set to Pages.'
+  } satisfies SettingsApplicabilityDetails;
+  const scrollApplicability = {
+    label: 'Scroll',
+    description: 'Applies only when reading flow is set to Scroll.'
+  } satisfies SettingsApplicabilityDetails;
+
   let pageMarginMode = $state<DimensionMode>($firstDimensionMargin$ > 0 ? 'custom' : 'automatic');
   let rememberedPageMargin = $state($firstDimensionMargin$ || 24);
   let lineLengthMode = $state<LineLengthMode>(
@@ -90,8 +95,6 @@
     $swipeThreshold$ <= 15 ? 'high' : $swipeThreshold$ <= 55 ? 'medium' : 'low'
   );
 
-  let paginated = $derived($viewMode$ === ViewMode.Paginated);
-  let vertical = $derived($writingMode$ === 'vertical-rl');
   let wakeLockSupported = $derived(browser && 'wakeLock' in navigator);
 
   $effect(() => {
@@ -123,11 +126,6 @@
   $effect(() => {
     if ($savePositionOnExit$) $confirmClose$ = false;
   });
-
-  function resetReadingMarker() {
-    $verticalCustomReadingPosition$ = 100;
-    $horizontalCustomReadingPosition$ = 0;
-  }
 </script>
 
 <svelte:head>
@@ -135,49 +133,9 @@
 </svelte:head>
 
 <SettingsSection title="Layout">
-  <SettingsItem
-    label="Reading flow"
-    description="Turn pages or scroll through one continuous document."
-  >
-    {#snippet control()}
-      <SettingsSegmentedControl
-        label="Reading flow"
-        options={readingFlowOptions}
-        bind:value={$viewMode$}
-      />
-    {/snippet}
-  </SettingsItem>
-
-  {#if paginated && !vertical}
-    <SettingsItem
-      label="Text columns"
-      description="Auto adds columns as needed to keep each one roughly 1,000 px wide or less."
-      inset
-    >
-      {#snippet control()}
-        <SettingsSegmentedControl
-          label="Text columns"
-          options={pageColumnOptions}
-          bind:value={$pageColumns$}
-        />
-      {/snippet}
-    </SettingsItem>
-  {/if}
-
-  {#if paginated}
-    <SettingsSwitchItem
-      label="Keep paragraphs on one page"
-      description="Avoid splitting a paragraph between pages when possible; this can leave blank space."
-      bind:checked={$avoidPageBreak$}
-      inset
-    />
-  {/if}
-
   <SettingsRadioItem
     legend="Page margins"
-    description={vertical
-      ? 'Blank space to the left and right of vertical text.'
-      : 'Blank space above and below horizontal text.'}
+    description="Blank space above and below horizontal text, or to the left and right of vertical text."
     options={pageMarginOptions}
     bind:value={pageMarginMode}
   >
@@ -198,10 +156,8 @@
   </SettingsRadioItem>
 
   <SettingsRadioItem
-    legend={vertical ? 'Maximum reading area height' : 'Maximum reading area width'}
-    description={vertical
-      ? 'Limits the overall height available to vertical text.'
-      : 'Limits the overall width available to horizontal text.'}
+    legend="Maximum reading area"
+    description="Limits the width of horizontal text or the height of vertical text."
     options={lineLengthOptions}
     bind:value={lineLengthMode}
   >
@@ -220,44 +176,60 @@
       {/if}
     {/snippet}
   </SettingsRadioItem>
+
+  <SettingsItem
+    label="Text columns"
+    description="Auto adds columns as needed to keep each one roughly 1,000 px wide or less."
+    applicability={horizontalPagesApplicability}
+  >
+    {#snippet control()}
+      <SettingsSegmentedControl
+        label="Text columns"
+        options={pageColumnOptions}
+        bind:value={$pageColumns$}
+      />
+    {/snippet}
+  </SettingsItem>
+
+  <SettingsSwitchItem
+    label="Keep paragraphs on one page"
+    description="Avoids splitting a paragraph when possible; this can leave blank space."
+    applicability={pagesApplicability}
+    bind:checked={$avoidPageBreak$}
+  />
 </SettingsSection>
 
 <SettingsSection title="Navigation">
-  {#if paginated}
-    <SettingsSwitchItem
-      label="Turn pages with the mouse wheel"
-      description="Use vertical wheel movement to move through paginated books."
-      bind:checked={$wheelNavigationEnabled$}
-    />
-    <SettingsSwitchItem
-      label="Tap page edges to turn pages"
-      description="Reserve a small area on either edge for page turning."
-      bind:checked={$enableTapEdgeToFlip$}
-    />
-    <SettingsItem
-      label="Swipe sensitivity"
-      description="How far a swipe must travel before the page turns."
-    >
-      {#snippet control()}
-        <SettingsSegmentedControl
-          label="Swipe sensitivity"
-          options={swipeSensitivityOptions}
-          bind:value={swipeSensitivity}
-        />
-      {/snippet}
-    </SettingsItem>
-  {:else}
-    <SettingsItem>
-      <p class="text-sm text-gray-600">
-        Page-turning controls appear here when Reading flow is set to Pages.
-      </p>
-    </SettingsItem>
-  {/if}
+  <SettingsSwitchItem
+    label="Turn pages with the mouse wheel"
+    description="Uses vertical wheel movement to move through the book."
+    applicability={pagesApplicability}
+    bind:checked={$wheelNavigationEnabled$}
+  />
+  <SettingsSwitchItem
+    label="Tap page edges to turn pages"
+    description="Reserves a small area on either edge for page turning."
+    applicability={pagesApplicability}
+    bind:checked={$enableTapEdgeToFlip$}
+  />
+  <SettingsItem
+    label="Swipe sensitivity"
+    description="How far a swipe must travel before the page turns."
+    applicability={pagesApplicability}
+  >
+    {#snippet control()}
+      <SettingsSegmentedControl
+        label="Swipe sensitivity"
+        options={swipeSensitivityOptions}
+        bind:value={swipeSensitivity}
+      />
+    {/snippet}
+  </SettingsItem>
 
   {#if wakeLockSupported}
     <SettingsSwitchItem
       label="Keep the screen awake while reading"
-      description="Prevent this device from dimming or locking while the reader is visible."
+      description="Prevents this device from dimming or locking while the reader is visible."
       bind:checked={$enableReaderWakeLock$}
     />
   {/if}
@@ -266,13 +238,13 @@
 <SettingsSection title="Saving your place">
   <SettingsSwitchItem
     label="Save my position while reading"
-    description="Bookmark your position after a short pause in page movement."
+    description="Updates the bookmark after you stop scrolling or turning pages."
     bind:checked={$autoBookmark$}
   />
   {#if $autoBookmark$}
     <SettingsNumberItem
       label="Save after"
-      description="Time without scrolling or changing pages."
+      description="Time without scrolling or turning a page."
       bind:value={$autoBookmarkTime$}
       unit="seconds"
       min={1}
@@ -284,47 +256,30 @@
 
   <SettingsSwitchItem
     label="Save my position when leaving"
-    description="Update the bookmark before returning to the library or another app page."
+    description="Updates the bookmark before navigating away from the open book."
     bind:checked={$savePositionOnExit$}
   />
   {#if !$savePositionOnExit$}
     <SettingsSwitchItem
       label="Warn before leaving with unsaved progress"
-      description="Ask for confirmation when the latest position has not been bookmarked."
+      description="Asks for confirmation when the latest position has not been bookmarked."
       bind:checked={$confirmClose$}
       inset
     />
   {/if}
 
-  {#if paginated}
-    <SettingsSwitchItem
-      label="Anchor bookmarks near selected text"
-      description="Use current or recently selected text instead of the page start when placing a bookmark."
-      bind:checked={$selectionToBookmarkEnabled$}
-    />
-  {:else}
-    {#if $statisticsEnabled$}
-      <SettingsSwitchItem
-        label="Pause tracking while moving the marker"
-        description="Resume tracking automatically after the marker has been placed."
-        bind:checked={$pauseTrackerOnCustomPointChange$}
-      />
-    {/if}
-    <SettingsItem
-      label="Reset reading marker"
-      description="Return the marker to its default position for each text direction."
-    >
-      {#snippet control()}
-        <button
-          type="button"
-          class="rounded border border-gray-500 px-3 py-1.5 text-sm font-medium hover:bg-gray-400/15"
-          onclick={resetReadingMarker}
-        >
-          Reset marker
-        </button>
-      {/snippet}
-    </SettingsItem>
-  {/if}
+  <SettingsSwitchItem
+    label="Anchor bookmarks near selected text"
+    description="Prefers selected text; otherwise uses a set reading position or the start of the visible text."
+    applicability={pagesApplicability}
+    bind:checked={$selectionToBookmarkEnabled$}
+  />
+  <SettingsSwitchItem
+    label="Pause tracking while positioning the marker"
+    description="Excludes time spent positioning the marker from your reading statistics."
+    applicability={scrollApplicability}
+    bind:checked={$pauseTrackerOnCustomPointChange$}
+  />
 </SettingsSection>
 
 <SettingsSection

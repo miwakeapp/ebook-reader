@@ -4,6 +4,7 @@
   import DisplayReaderPreview from '$lib/components/settings/display/display-reader-preview.svelte';
   import DisplayThemePicker from '$lib/components/settings/display/display-theme-picker.svelte';
   import SettingsItem from '$lib/components/settings/settings-item.svelte';
+  import type { SettingsApplicabilityDetails } from '$lib/components/settings/settings-applicability.svelte';
   import SettingsNumberInput from '$lib/components/settings/settings-number-input.svelte';
   import SettingsNumberItem from '$lib/components/settings/settings-number-item.svelte';
   import SettingsRadioItem from '$lib/components/settings/settings-radio-item.svelte';
@@ -28,8 +29,7 @@
     textIndentation$,
     textMarginMode$,
     textMarginValue$,
-    verticalTextOrientation$,
-    writingMode$
+    verticalTextOrientation$
   } from '$lib/data/store';
   import { formatPageTitle } from '$lib/functions/format-page-title';
 
@@ -38,13 +38,13 @@
       id: true,
       label: 'Simplified',
       description:
-        'Hide recognized edition, imprint, and bundled-content suffixes. Stored titles are unchanged.',
+        'Hides recognized edition, imprint, and bundled-content suffixes. Stored titles are unchanged.',
       isDefault: true
     },
     {
       id: false,
       label: 'Full',
-      description: 'Show each imported book title exactly as it is stored.'
+      description: 'Shows each imported book title exactly as it is stored.'
     }
   ];
 
@@ -53,22 +53,17 @@
     { id: 'manual' as const, label: 'Custom' }
   ];
 
-  const writingDirectionOptions = [
-    { id: 'vertical-rl' as const, label: 'Vertical' },
-    { id: 'horizontal-tb' as const, label: 'Horizontal' }
-  ];
-
   const paragraphAlignmentOptions = [
     {
       id: false,
       label: 'Book formatting',
-      description: 'Keep the paragraph alignment supplied by the book.',
+      description: 'Keeps the paragraph alignment supplied by the book.',
       isDefault: true
     },
     {
       id: true,
       label: 'Justified',
-      description: 'Align text evenly along both edges of each paragraph.'
+      description: 'Aligns text evenly along both edges of each paragraph.'
     }
   ];
 
@@ -76,18 +71,18 @@
     {
       id: BlurMode.OFF,
       label: 'Show images',
-      description: 'Display illustrations immediately.',
+      description: 'Displays illustrations immediately.',
       isDefault: true
     },
     {
       id: BlurMode.AFTER_TOC,
       label: 'Blur story illustrations',
-      description: 'Show the cover and table of contents, then blur later illustrations.'
+      description: 'Shows the cover and table of contents, then blurs later illustrations.'
     },
     {
       id: BlurMode.ALL,
       label: 'Blur all illustrations',
-      description: 'Blur every non-inline illustration, including the cover.'
+      description: 'Blurs every non-inline illustration, including the cover.'
     }
   ];
 
@@ -95,13 +90,13 @@
     {
       id: 'mixed' as VerticalTextOrientation,
       label: 'Mixed',
-      description: 'Turn unformatted halfwidth Latin letters and numbers sideways.',
+      description: 'Turns unformatted halfwidth Latin letters and numbers sideways.',
       isDefault: true
     },
     {
       id: 'upright' as VerticalTextOrientation,
       label: 'Upright',
-      description: 'Keep unformatted halfwidth Latin letters and numbers upright.'
+      description: 'Keeps unformatted halfwidth Latin letters and numbers upright.'
     }
   ];
 
@@ -109,21 +104,26 @@
     {
       id: false,
       label: 'Standard',
-      description: 'Use the font’s normal full-height vertical spacing.',
+      description: 'Uses the font’s normal full-height vertical spacing.',
       isDefault: true
     },
     {
       id: true,
       label: 'Proportional',
-      description: 'Use proportional vertical metrics when the selected font provides them.'
+      description: 'Uses proportional vertical metrics when the selected font provides them.'
     }
   ];
+
+  const verticalTextApplicability = {
+    label: 'Vertical',
+    description: 'Applies only when text direction is set to Vertical.'
+  } satisfies SettingsApplicabilityDetails;
 
   let prettyTextWrapSupported: boolean | undefined = $state();
   let prettyTextWrapDescription = $derived(
     prettyTextWrapSupported === false
       ? 'This browser does not support improved line breaking; the preference still applies in browsers that do.'
-      : 'Use a slower, higher-quality layout pass to improve wrapping; many paragraphs will look unchanged.'
+      : 'Uses a slower, higher-quality layout pass to improve wrapping; many paragraphs will look unchanged.'
   );
 
   onMount(() => {
@@ -162,19 +162,9 @@
 
   <SettingsSection
     class="lg:[grid-area:typography]"
-    title="Reader Typography"
+    title="Reader typography"
     description="Set the typefaces, size, and paragraph rhythm used in the reader."
   >
-    <SettingsItem label="Text direction">
-      {#snippet control()}
-        <SettingsSegmentedControl
-          label="Text direction"
-          options={writingDirectionOptions}
-          bind:value={$writingMode$}
-        />
-      {/snippet}
-    </SettingsItem>
-
     <SettingsItem class="grid gap-4 sm:grid-cols-2">
       <FontPicker group="serif" bind:selectedFont={$fontFamilyGroupOne$} />
       <FontPicker group="sans-serif" bind:selectedFont={$fontFamilyGroupTwo$} />
@@ -239,14 +229,14 @@
   >
     <SettingsRadioItem
       legend="Furigana display"
-      description="Choose how pronunciation readings above or beside Japanese text are shown."
+      description="Controls how pronunciation readings above or beside Japanese text are shown."
       options={furiganaStyleOptions}
       bind:value={$furiganaStyle$}
     />
 
     <SettingsRadioItem
       legend="Image spoiler protection"
-      description="Blur illustrations until you deliberately reveal them. Inline symbols and decorative glyphs are not blurred."
+      description="Controls whether illustrations remain blurred until you deliberately reveal them. Inline symbols and decorative glyphs are not blurred."
       options={imageSpoilerOptions}
       bind:value={$blurImageMode$}
     />
@@ -260,7 +250,7 @@
   >
     <SettingsSwitchItem
       label="Prioritize reader paragraph formatting"
-      description="Make your paragraph gap, first-line indent, alignment, and improved line breaks override conflicting styles in the book."
+      description="Makes your paragraph gap, first-line indent, alignment, and improved line breaks override conflicting styles in the book."
       bind:checked={$prioritizeReaderStyles$}
     />
 
@@ -274,13 +264,15 @@
       legend="Latin letters and numbers in vertical text"
       description="Controls the fallback orientation for unformatted halfwidth Latin letters and numbers. Fullwidth forms and vertically combined runs remain upright."
       options={verticalOrientationOptions}
+      applicability={verticalTextApplicability}
       bind:value={$verticalTextOrientation$}
     />
 
     <SettingsRadioItem
       legend="Vertical character spacing"
-      description="Applies only to vertical text. Proportional spacing changes fonts that provide alternate vertical metrics."
+      description="Proportional spacing changes fonts that provide alternate vertical metrics."
       options={verticalSpacingOptions}
+      applicability={verticalTextApplicability}
       bind:value={$enableFontVPAL$}
     />
   </SettingsSection>

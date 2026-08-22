@@ -91,6 +91,9 @@ test('continuous reader always lets users move and show the reading marker', asy
 
   const reopenedHeader = await showReaderHeader(page);
   await reopenedHeader.getByRole('button', { name: 'Marker ▾', exact: true }).click();
+  await expect(
+    page.getByRole('button', { name: 'Reset reading marker', exact: true })
+  ).toBeVisible();
   await page.getByRole('button', { name: 'Show reading marker', exact: true }).click();
   await expect(page.locator('.border-red-500')).toHaveCount(2);
 });

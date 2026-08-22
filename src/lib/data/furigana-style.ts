@@ -16,24 +16,24 @@ export const furiganaStyleOptions: FuriganaStyleOption[] = [
   {
     id: FuriganaStyle.Default,
     label: 'As published',
-    description: 'Show furigana normally, as supplied by the book.',
+    description: 'Shows furigana normally, as supplied by the book.',
     isDefault: true
   },
   {
     id: FuriganaStyle.Dim,
     label: 'Dimmed',
     description:
-      'Show faint readings; hover to preview, or click or tap one to make it fully visible.'
+      'Shows faint readings; hover to preview, or click or tap one to make it fully visible.'
   },
   {
     id: FuriganaStyle.Toggle,
     label: 'Reveal on demand',
-    description: 'Hide readings; hover to preview, or click or tap one to show or hide it.'
+    description: 'Hides readings; hover to preview, or click or tap one to show or hide it.'
   },
   {
     id: FuriganaStyle.Hide,
     label: 'Hidden',
-    description: 'Never show furigana.'
+    description: 'Never shows furigana.'
   }
 ];
 
