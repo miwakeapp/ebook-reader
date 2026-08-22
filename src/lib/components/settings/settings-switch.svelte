@@ -22,7 +22,7 @@
     aria-describedby={describedBy}
   />
   <span
-    class="inline-block h-6 w-10 rounded-full bg-gray-500 transition-colors peer-checked:bg-blue-600 peer-focus-visible:outline-2 peer-focus-visible:outline-offset-2 peer-focus-visible:outline-blue-600 peer-disabled:cursor-not-allowed"
+    class="inline-block h-6 w-10 rounded-full bg-gray-500 transition-colors peer-checked:bg-accent-color peer-focus-visible:outline-2 peer-focus-visible:outline-offset-2 peer-focus-visible:outline-accent-color peer-disabled:cursor-not-allowed"
     aria-hidden="true"
   ></span>
   <span

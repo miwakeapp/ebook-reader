@@ -8,8 +8,11 @@
   import SettingsItem from '$lib/components/settings/settings-item.svelte';
   import SettingsNumberItem from '$lib/components/settings/settings-number-item.svelte';
   import SettingsRadioItem from '$lib/components/settings/settings-radio-item.svelte';
+  import SettingsRestoreDefaults from '$lib/components/settings/settings-restore-defaults.svelte';
   import SettingsSection from '$lib/components/settings/settings-section.svelte';
   import SettingsSwitchItem from '$lib/components/settings/settings-switch-item.svelte';
+  import SettingsButton from '$lib/components/settings/settings-button.svelte';
+  import { trackingSettingsDefaults } from '$lib/data/settings-defaults';
   import {
     addCharactersOnCompletion$,
     adjustStatisticsAfterIdleTime$,
@@ -17,7 +20,7 @@
     keepLocalReadingDataOnDeletion$,
     openTrackerOnCompletion$,
     overwriteBookCompletion$,
-    startDayHoursForTracker$,
+    dayBoundaryTime$,
     statisticsEnabled$,
     trackerAutoPause$,
     trackerAutostartTime$,
@@ -101,104 +104,69 @@
       description: 'Stops the session so you can check the new position before continuing.'
     }
   ];
-  const dayBoundaryOptions = Array.from({ length: 24 }, (_, hour) => ({
-    hour,
-    label: `${`${hour}`.padStart(2, '0')}:00`
-  }));
-
-  function clamp(value: number, minimum: number, maximum: number) {
-    return Math.min(maximum, Math.max(minimum, value));
-  }
-
   let trackerStartMode = $state<TrackerStartMode>(
     $trackerAutostartTime$ > 0 ? 'automatic' : 'manual'
   );
-  let rememberedAutostartTime = $state(
-    $trackerAutostartTime$ > 0 && Number.isFinite($trackerAutostartTime$)
-      ? clamp(Math.floor($trackerAutostartTime$), 1, 300)
-      : 3
-  );
+  let rememberedAutostartTime = $state($trackerAutostartTime$ || 3);
   let idlePauseEnabled = $state($trackerIdleTime$ > 0);
-  let idleMinutes = $state(
-    $trackerIdleTime$ > 0 && Number.isFinite($trackerIdleTime$)
-      ? clamp($trackerIdleTime$ / 60, 0.5, 720)
-      : 15
-  );
+  let idleMinutes = $state($trackerIdleTime$ > 0 ? $trackerIdleTime$ / 60 : 15);
   let forwardThresholdEnabled = $state($trackerForwardSkipThreshold$ > 0);
   let backwardThresholdEnabled = $state($trackerBackwardSkipThreshold$ > 0);
-  let rememberedForwardThreshold = $state(
-    $trackerForwardSkipThreshold$ > 0 && Number.isFinite($trackerForwardSkipThreshold$)
-      ? Math.floor($trackerForwardSkipThreshold$)
-      : 2700
-  );
-  let rememberedBackwardThreshold = $state(
-    $trackerBackwardSkipThreshold$ > 0 && Number.isFinite($trackerBackwardSkipThreshold$)
-      ? Math.floor($trackerBackwardSkipThreshold$)
-      : 2700
-  );
+  let rememberedForwardThreshold = $state($trackerForwardSkipThreshold$ || 2700);
+  let rememberedBackwardThreshold = $state($trackerBackwardSkipThreshold$ || 2700);
   let cleanupInProgress = $state(false);
   let cleanupStatus = $state('');
 
-  $effect(() => {
-    if (trackerStartMode === 'manual') {
+  function setTrackerStartMode(mode: TrackerStartMode) {
+    trackerStartMode = mode;
+    if (mode === 'manual') {
       if ($trackerAutostartTime$ > 0) rememberedAutostartTime = $trackerAutostartTime$;
       $trackerAutostartTime$ = 0;
     } else {
-      const seconds =
-        Number.isFinite($trackerAutostartTime$) && $trackerAutostartTime$ > 0
-          ? clamp(Math.floor($trackerAutostartTime$), 1, 300)
-          : rememberedAutostartTime;
-      $trackerAutostartTime$ = seconds;
+      $trackerAutostartTime$ = rememberedAutostartTime;
     }
-  });
+  }
 
-  $effect(() => {
-    if (!idlePauseEnabled) {
+  function setIdlePauseEnabled(enabled: boolean) {
+    idlePauseEnabled = enabled;
+    if (!enabled) {
       if ($trackerIdleTime$ > 0) idleMinutes = $trackerIdleTime$ / 60;
       $trackerIdleTime$ = 0;
     } else {
-      const minutes = Number.isFinite(idleMinutes) ? clamp(idleMinutes, 0.5, 720) : 15;
-      idleMinutes = minutes;
+      $trackerIdleTime$ = Math.floor(idleMinutes * 60);
+    }
+  }
+
+  function setIdleMinutes(minutes: number) {
+    idleMinutes = minutes;
+    if (Number.isFinite(minutes)) {
       $trackerIdleTime$ = Math.floor(minutes * 60);
     }
-  });
+  }
 
-  $effect(() => {
-    const hour = Number.isFinite($startDayHoursForTracker$)
-      ? clamp(Math.floor($startDayHoursForTracker$), 0, 23)
-      : 0;
-    $startDayHoursForTracker$ = hour;
-  });
-
-  $effect(() => {
-    if (!forwardThresholdEnabled) {
+  function setForwardThresholdEnabled(enabled: boolean) {
+    forwardThresholdEnabled = enabled;
+    if (!enabled) {
       if ($trackerForwardSkipThreshold$ > 0) {
         rememberedForwardThreshold = $trackerForwardSkipThreshold$;
       }
       $trackerForwardSkipThreshold$ = 0;
     } else {
-      const characters =
-        Number.isFinite($trackerForwardSkipThreshold$) && $trackerForwardSkipThreshold$ > 0
-          ? Math.floor($trackerForwardSkipThreshold$)
-          : rememberedForwardThreshold;
-      $trackerForwardSkipThreshold$ = characters;
+      $trackerForwardSkipThreshold$ = rememberedForwardThreshold;
     }
-  });
+  }
 
-  $effect(() => {
-    if (!backwardThresholdEnabled) {
+  function setBackwardThresholdEnabled(enabled: boolean) {
+    backwardThresholdEnabled = enabled;
+    if (!enabled) {
       if ($trackerBackwardSkipThreshold$ > 0) {
         rememberedBackwardThreshold = $trackerBackwardSkipThreshold$;
       }
       $trackerBackwardSkipThreshold$ = 0;
     } else {
-      const characters =
-        Number.isFinite($trackerBackwardSkipThreshold$) && $trackerBackwardSkipThreshold$ > 0
-          ? Math.floor($trackerBackwardSkipThreshold$)
-          : rememberedBackwardThreshold;
-      $trackerBackwardSkipThreshold$ = characters;
+      $trackerBackwardSkipThreshold$ = rememberedBackwardThreshold;
     }
-  });
+  }
 
   async function deleteOrphanedReadingData() {
     const confirmed = await showConfirmDialog({
@@ -221,6 +189,34 @@
       cleanupInProgress = false;
     }
   }
+
+  function restoreDefaults() {
+    $statisticsEnabled$ = trackingSettingsDefaults.statisticsEnabled;
+
+    trackerStartMode = 'manual';
+    rememberedAutostartTime = 3;
+    $trackerAutostartTime$ = trackingSettingsDefaults.trackerAutostartTime;
+    $trackerAutoPause$ = trackingSettingsDefaults.trackerAutoPause;
+    $trackerPopupDetection$ = trackingSettingsDefaults.trackerPopupDetection;
+    idlePauseEnabled = false;
+    idleMinutes = 15;
+    $trackerIdleTime$ = trackingSettingsDefaults.trackerIdleTime;
+    $adjustStatisticsAfterIdleTime$ = trackingSettingsDefaults.adjustStatisticsAfterIdleTime;
+
+    $openTrackerOnCompletion$ = trackingSettingsDefaults.openTrackerOnCompletion;
+    $addCharactersOnCompletion$ = trackingSettingsDefaults.addCharactersOnCompletion;
+    $overwriteBookCompletion$ = trackingSettingsDefaults.overwriteBookCompletion;
+    $dayBoundaryTime$ = trackingSettingsDefaults.dayBoundaryTime;
+    $keepLocalReadingDataOnDeletion$ = trackingSettingsDefaults.keepLocalReadingDataOnDeletion;
+
+    forwardThresholdEnabled = true;
+    rememberedForwardThreshold = trackingSettingsDefaults.trackerForwardSkipThreshold;
+    $trackerForwardSkipThreshold$ = trackingSettingsDefaults.trackerForwardSkipThreshold;
+    backwardThresholdEnabled = true;
+    rememberedBackwardThreshold = trackingSettingsDefaults.trackerBackwardSkipThreshold;
+    $trackerBackwardSkipThreshold$ = trackingSettingsDefaults.trackerBackwardSkipThreshold;
+    $trackerSkipThresholdAction$ = trackingSettingsDefaults.trackerSkipThresholdAction;
+  }
 </script>
 
 <svelte:head>
@@ -242,7 +238,7 @@
   <SettingsRadioItem
     legend="Start tracking"
     options={trackerStartOptions}
-    bind:value={trackerStartMode}
+    bind:value={() => trackerStartMode, setTrackerStartMode}
     disabled={!$statisticsEnabled$}
   />
   {#if trackerStartMode === 'automatic'}
@@ -279,14 +275,14 @@
   <SettingsSwitchItem
     label="Pause after no page activity"
     description="Automatically pauses a session when you stop turning pages or scrolling."
-    bind:checked={idlePauseEnabled}
+    bind:checked={() => idlePauseEnabled, setIdlePauseEnabled}
     disabled={!$statisticsEnabled$}
   />
   {#if idlePauseEnabled}
     <SettingsNumberItem
       label="Idle time"
       description="From 30 seconds to 12 hours."
-      bind:value={idleMinutes}
+      bind:value={() => idleMinutes, setIdleMinutes}
       unit="minutes"
       min={0.5}
       max={720}
@@ -334,17 +330,17 @@
     controlId="tracking-day-boundary"
   >
     {#snippet control()}
-      <select
+      <input
         id="tracking-day-boundary"
+        type="time"
         class="rounded border border-gray-400 bg-white px-3 py-2"
         aria-labelledby="tracking-day-boundary-label"
         aria-describedby="tracking-day-boundary-description"
-        bind:value={$startDayHoursForTracker$}
-      >
-        {#each dayBoundaryOptions as option (option.hour)}
-          <option value={option.hour}>{option.label}</option>
-        {/each}
-      </select>
+        bind:value={$dayBoundaryTime$}
+        onchange={(event) => {
+          if (!(event.currentTarget as HTMLInputElement).value) $dayBoundaryTime$ = '00:00';
+        }}
+      />
     {/snippet}
   </SettingsItem>
 </SettingsSection>
@@ -363,28 +359,29 @@
     description="Permanently removes orphaned bookmarks and statistics without affecting books still in your library."
   >
     {#snippet control()}
-      <button
-        type="button"
-        class="rounded border border-red-700 px-3 py-1.5 text-sm font-medium text-red-800 hover:bg-red-50 disabled:cursor-wait disabled:opacity-60"
+      <SettingsButton
+        variant="danger"
         disabled={cleanupInProgress}
         onclick={deleteOrphanedReadingData}
       >
         {cleanupInProgress ? 'Deleting…' : 'Delete old data…'}
-      </button>
+      </SettingsButton>
     {/snippet}
-    <p class="min-h-5 text-sm text-gray-600" aria-live="polite">{cleanupStatus}</p>
+    {#if cleanupStatus}
+      <p class="text-sm text-gray-600" role="status">{cleanupStatus}</p>
+    {/if}
   </SettingsItem>
 </SettingsSection>
 
 <SettingsSection
-  title="Advanced tracking options"
-  description="Detect unusually large position jumps so they do not distort reading statistics."
+  title="Advanced"
+  description="Fine-tune less common tracking options or restore this page’s original settings."
   collapsible
 >
   <SettingsSwitchItem
     label="Detect large forward jumps"
     description="Treats moving forward by more than a set number of characters as a skip."
-    bind:checked={forwardThresholdEnabled}
+    bind:checked={() => forwardThresholdEnabled, setForwardThresholdEnabled}
     disabled={!$statisticsEnabled$}
   />
   {#if forwardThresholdEnabled}
@@ -401,7 +398,7 @@
   <SettingsSwitchItem
     label="Detect large backward jumps"
     description="Treats moving backward by more than a set number of characters as a skip."
-    bind:checked={backwardThresholdEnabled}
+    bind:checked={() => backwardThresholdEnabled, setBackwardThresholdEnabled}
     disabled={!$statisticsEnabled$}
   />
   {#if backwardThresholdEnabled}
@@ -423,4 +420,17 @@
       disabled={!$statisticsEnabled$}
     />
   {/if}
+
+  <SettingsItem
+    label="Restore tracking defaults"
+    description="Returns the settings on this page to their original values without deleting recorded reading data or reading goals."
+  >
+    {#snippet control()}
+      <SettingsRestoreDefaults
+        pageName="Tracking"
+        message="This restores the settings shown on this page to their original values. Recorded reading data and reading goals will not be deleted."
+        onrestore={restoreDefaults}
+      />
+    {/snippet}
+  </SettingsItem>
 </SettingsSection>

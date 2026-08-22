@@ -78,7 +78,7 @@
       {/if}
 
       {#if children}
-        <div class="col-span-full min-w-0">
+        <div class="col-span-full min-w-0 empty:hidden">
           {@render children()}
         </div>
       {/if}

@@ -35,7 +35,7 @@
           bind:group={value}
         />
         <span
-          class="block whitespace-nowrap px-3 py-2 leading-tight text-gray-900 transition-colors peer-checked:bg-gray-700 peer-checked:text-white peer-focus-visible:relative peer-focus-visible:z-10 peer-focus-visible:outline-2 peer-focus-visible:-outline-offset-2 peer-focus-visible:outline-blue-600"
+          class="block whitespace-nowrap px-3 py-2 leading-tight text-gray-900 transition-colors peer-checked:bg-accent-color peer-checked:text-white peer-focus-visible:relative peer-focus-visible:z-10 peer-focus-visible:outline-2 peer-focus-visible:-outline-offset-2 peer-focus-visible:outline-blue-600"
           >{option.label}</span
         >
       </label>

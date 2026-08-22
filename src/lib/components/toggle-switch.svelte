@@ -11,7 +11,7 @@
 <label class="flex items-center gap-3 select-none {className}">
   <span
     class="relative inline-block w-10 h-6 rounded-full transition-colors"
-    class:bg-blue-500={checked}
+    class:bg-accent-color={checked}
     class:bg-gray-500={!checked}
   >
     <input type="checkbox" class="sr-only" bind:checked />

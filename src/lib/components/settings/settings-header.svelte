@@ -13,7 +13,7 @@
   import { baseHeaderClasses } from '$lib/css-classes';
 
   interface Props {
-    activeRouteId?: RouteId | null;
+    activeRouteId: RouteId | null;
   }
 
   interface SettingItem {

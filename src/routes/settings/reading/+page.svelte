@@ -5,9 +5,11 @@
   import SettingsNumberInput from '$lib/components/settings/settings-number-input.svelte';
   import SettingsNumberItem from '$lib/components/settings/settings-number-item.svelte';
   import SettingsRadioItem from '$lib/components/settings/settings-radio-item.svelte';
+  import SettingsRestoreDefaults from '$lib/components/settings/settings-restore-defaults.svelte';
   import SettingsSection from '$lib/components/settings/settings-section.svelte';
   import SettingsSegmentedControl from '$lib/components/settings/settings-segmented-control.svelte';
   import SettingsSwitchItem from '$lib/components/settings/settings-switch-item.svelte';
+  import { readerModeSettingsDefaults, readingSettingsDefaults } from '$lib/data/settings-defaults';
   import {
     autoBookmark$,
     autoBookmarkTime$,
@@ -26,13 +28,14 @@
     showFooterChapterPercentage$,
     showPercentage$,
     swipeThreshold$,
+    viewMode$,
+    writingMode$,
     wheelNavigationEnabled$
   } from '$lib/data/store';
   import { formatPageTitle } from '$lib/functions/format-page-title';
 
   type DimensionMode = 'automatic' | 'custom';
   type LineLengthMode = 'available' | 'custom';
-  type SwipeSensitivity = 'high' | 'medium' | 'low';
 
   const pageMarginOptions = [
     {
@@ -66,9 +69,9 @@
     { id: 2, label: '2' }
   ];
   const swipeSensitivityOptions = [
-    { id: 'high' as const, label: 'High' },
-    { id: 'medium' as const, label: 'Medium' },
-    { id: 'low' as const, label: 'Low' }
+    { id: 10, label: 'High' },
+    { id: 40, label: 'Medium' },
+    { id: 80, label: 'Low' }
   ];
 
   const horizontalPagesApplicability = {
@@ -91,41 +94,71 @@
     $secondDimensionMaxValue$ > 0 ? 'custom' : 'available'
   );
   let rememberedLineLength = $state($secondDimensionMaxValue$ || 960);
-  let swipeSensitivity = $state<SwipeSensitivity>(
-    $swipeThreshold$ <= 15 ? 'high' : $swipeThreshold$ <= 55 ? 'medium' : 'low'
-  );
 
   let wakeLockSupported = $derived(browser && 'wakeLock' in navigator);
 
-  $effect(() => {
-    if (pageMarginMode === 'automatic') {
+  function setPageMarginMode(mode: DimensionMode) {
+    pageMarginMode = mode;
+    if (mode === 'automatic') {
       if ($firstDimensionMargin$ > 0) rememberedPageMargin = $firstDimensionMargin$;
       $firstDimensionMargin$ = 0;
     } else {
       $firstDimensionMargin$ = rememberedPageMargin;
     }
-  });
+  }
 
-  $effect(() => {
-    if (lineLengthMode === 'available') {
+  function setPageMargin(value: number) {
+    rememberedPageMargin = value;
+    if (pageMarginMode === 'custom' && Number.isFinite(value)) {
+      $firstDimensionMargin$ = value;
+    }
+  }
+
+  function setLineLengthMode(mode: LineLengthMode) {
+    lineLengthMode = mode;
+    if (mode === 'available') {
       if ($secondDimensionMaxValue$ > 0) rememberedLineLength = $secondDimensionMaxValue$;
       $secondDimensionMaxValue$ = 0;
     } else {
       $secondDimensionMaxValue$ = rememberedLineLength;
     }
-  });
+  }
 
-  $effect(() => {
-    $swipeThreshold$ = swipeSensitivity === 'high' ? 10 : swipeSensitivity === 'medium' ? 40 : 80;
-  });
+  function setLineLength(value: number) {
+    rememberedLineLength = value;
+    if (lineLengthMode === 'custom' && Number.isFinite(value)) {
+      $secondDimensionMaxValue$ = value;
+    }
+  }
 
-  $effect(() => {
-    if (!$autoBookmarkTime$ || $autoBookmarkTime$ < 1) $autoBookmarkTime$ = 3;
-  });
+  function restoreDefaults() {
+    $writingMode$ = readerModeSettingsDefaults.writingMode;
+    $viewMode$ = readerModeSettingsDefaults.viewMode;
 
-  $effect(() => {
-    if ($savePositionOnExit$) $confirmClose$ = false;
-  });
+    pageMarginMode = 'automatic';
+    rememberedPageMargin = 24;
+    $firstDimensionMargin$ = readingSettingsDefaults.firstDimensionMargin;
+    lineLengthMode = 'available';
+    rememberedLineLength = 960;
+    $secondDimensionMaxValue$ = readingSettingsDefaults.secondDimensionMaxValue;
+
+    $pageColumns$ = readingSettingsDefaults.pageColumns;
+    $avoidPageBreak$ = readingSettingsDefaults.avoidPageBreak;
+    $wheelNavigationEnabled$ = readingSettingsDefaults.wheelNavigationEnabled;
+    $enableTapEdgeToFlip$ = readingSettingsDefaults.enableTapEdgeToFlip;
+    $swipeThreshold$ = readingSettingsDefaults.swipeThreshold;
+    $enableReaderWakeLock$ = readingSettingsDefaults.enableReaderWakeLock;
+    $autoBookmark$ = readingSettingsDefaults.autoBookmark;
+    $autoBookmarkTime$ = readingSettingsDefaults.autoBookmarkTime;
+    $savePositionOnExit$ = readingSettingsDefaults.savePositionOnExit;
+    $confirmClose$ = readingSettingsDefaults.confirmClose;
+    $selectionToBookmarkEnabled$ = readingSettingsDefaults.selectionToBookmarkEnabled;
+    $pauseTrackerOnCustomPointChange$ = readingSettingsDefaults.pauseTrackerOnCustomPointChange;
+    $showCharacterCounter$ = readingSettingsDefaults.showCharacterCounter;
+    $showPercentage$ = readingSettingsDefaults.showPercentage;
+    $showFooterChapterCharacterCounter$ = readingSettingsDefaults.showFooterChapterCharacterCounter;
+    $showFooterChapterPercentage$ = readingSettingsDefaults.showFooterChapterPercentage;
+  }
 </script>
 
 <svelte:head>
@@ -137,13 +170,13 @@
     legend="Page margins"
     description="Blank space above and below horizontal text, or to the left and right of vertical text."
     options={pageMarginOptions}
-    bind:value={pageMarginMode}
+    bind:value={() => pageMarginMode, setPageMarginMode}
   >
     {#snippet optionControl(option, { labelledBy })}
       {#if option === 'custom'}
         <SettingsNumberInput
           id="reading-custom-page-margin"
-          bind:value={rememberedPageMargin}
+          bind:value={() => rememberedPageMargin, setPageMargin}
           unit="px"
           {labelledBy}
           min={1}
@@ -159,13 +192,13 @@
     legend="Maximum reading area"
     description="Limits the width of horizontal text or the height of vertical text."
     options={lineLengthOptions}
-    bind:value={lineLengthMode}
+    bind:value={() => lineLengthMode, setLineLengthMode}
   >
     {#snippet optionControl(option, { labelledBy })}
       {#if option === 'custom'}
         <SettingsNumberInput
           id="reading-custom-maximum"
-          bind:value={rememberedLineLength}
+          bind:value={() => rememberedLineLength, setLineLength}
           unit="px"
           {labelledBy}
           min={100}
@@ -221,7 +254,7 @@
       <SettingsSegmentedControl
         label="Swipe sensitivity"
         options={swipeSensitivityOptions}
-        bind:value={swipeSensitivity}
+        bind:value={$swipeThreshold$}
       />
     {/snippet}
   </SettingsItem>
@@ -259,14 +292,11 @@
     description="Updates the bookmark before navigating away from the open book."
     bind:checked={$savePositionOnExit$}
   />
-  {#if !$savePositionOnExit$}
-    <SettingsSwitchItem
-      label="Warn before leaving with unsaved progress"
-      description="Asks for confirmation when the latest position has not been bookmarked."
-      bind:checked={$confirmClose$}
-      inset
-    />
-  {/if}
+  <SettingsSwitchItem
+    label="Warn before leaving with unsaved progress"
+    description="Asks before navigating away when your position has changed, and before closing or reloading while syncing is unfinished."
+    bind:checked={$confirmClose$}
+  />
 
   <SettingsSwitchItem
     label="Anchor bookmarks near selected text"
@@ -311,3 +341,11 @@
     </fieldset>
   </SettingsItem>
 </SettingsSection>
+
+<div class="flex justify-end border-t border-gray-400/40 pt-6">
+  <SettingsRestoreDefaults
+    pageName="Reading"
+    message="This restores the settings shown on this page, including Text direction and Reading flow, to their original values. Your books, bookmarks, and reading data will not be affected."
+    onrestore={restoreDefaults}
+  />
+</div>

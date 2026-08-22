@@ -47,7 +47,7 @@
     manualBookmark$,
     customThemes$,
     overwriteBookCompletion$,
-    startDayHoursForTracker$,
+    dayBoundaryTime$,
     pauseTrackerOnCustomPointChange$,
     showCharacterCounter$,
     showPercentage$,
@@ -367,9 +367,7 @@
     }
 
     if (!$statisticsEnabled$) {
-      const wasNew = (
-        await database.setFirstBookRead(currentContext.title, $startDayHoursForTracker$)
-      )[1];
+      const wasNew = (await database.setFirstBookRead(currentContext.title, $dayBoundaryTime$))[1];
 
       if (wasNew) {
         scheduleReplication(StorageDataType.STATISTICS);
@@ -582,11 +580,7 @@
   });
 
   function handleUnload(event: BeforeUnloadEvent) {
-    if (
-      $confirmClose$ &&
-      $manualBookmark$ &&
-      (isSyncingOrPending() || storedExploredCharacter !== exploredCharCount)
-    ) {
+    if ($confirmClose$ && (isSyncingOrPending() || storedExploredCharacter !== exploredCharCount)) {
       event.preventDefault();
 
       return (event.returnValue = 'Are you sure you want to exit?');
@@ -685,7 +679,7 @@
       }
 
       const finishedStatistic = await database.getStatisticForCompletedBook(rawBookData.title);
-      const todayKey = getDateKey($startDayHoursForTracker$);
+      const todayKey = getDateKey($dayBoundaryTime$);
       const statisticsUntilToday = await database.getStatisticsUntilDate(
         rawBookData.title,
         todayKey
@@ -971,10 +965,11 @@
         readerController.stopAutoScrollIfAvailable();
         pauseTrackerFor('leaving-reader');
 
-        if ($confirmClose$ && $manualBookmark$ && storedExploredCharacter !== exploredCharCount) {
+        if ($confirmClose$ && storedExploredCharacter !== exploredCharCount) {
           const confirmed = await showConfirmDialog({
             title: 'Confirm exit',
-            message: 'Your current location was not bookmarked. Continue leaving?',
+            message:
+              'Your reading position has changed and has not yet been saved. Continue leaving?',
             confirmLabel: 'Continue'
           });
 

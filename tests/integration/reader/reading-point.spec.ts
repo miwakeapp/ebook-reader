@@ -8,7 +8,7 @@ import {
 import { showReaderHeader } from '../helpers/reader.ts';
 import { useReaderSettings } from '../helpers/workflows.ts';
 
-test('legacy disabled reading markers migrate to the default positions', async ({ page }) => {
+test('legacy reading marker preference is ignored', async ({ page }) => {
   await page.addInitScript(() => {
     localStorage.setItem('customReadingPointEnabled', '0');
     localStorage.setItem('horizontalCustomReadingPosition', '42');
@@ -25,27 +25,7 @@ test('legacy disabled reading markers migrate to the default positions', async (
         vertical: localStorage.getItem('verticalCustomReadingPosition')
       }))
     )
-    .toEqual({ enabled: null, horizontal: '0', vertical: '100' });
-});
-
-test('legacy enabled reading markers retain their positions', async ({ page }) => {
-  await page.addInitScript(() => {
-    localStorage.setItem('customReadingPointEnabled', '1');
-    localStorage.setItem('horizontalCustomReadingPosition', '42');
-    localStorage.setItem('verticalCustomReadingPosition', '37');
-  });
-
-  await page.goto('/settings/reading');
-
-  await expect
-    .poll(() =>
-      page.evaluate(() => ({
-        enabled: localStorage.getItem('customReadingPointEnabled'),
-        horizontal: localStorage.getItem('horizontalCustomReadingPosition'),
-        vertical: localStorage.getItem('verticalCustomReadingPosition')
-      }))
-    )
-    .toEqual({ enabled: null, horizontal: '42', vertical: '37' });
+    .toEqual({ enabled: '0', horizontal: '42', vertical: '37' });
 });
 
 test('continuous reader always lets users move and show the reading marker', async ({ page }) => {

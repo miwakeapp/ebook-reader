@@ -182,6 +182,15 @@ test('browser Back honors a canceled reader exit', async ({ page }) => {
   await expect(page).toHaveURL(bookURL);
 });
 
+test('exit warning remains available while saving position on exit', async ({ page }) => {
+  const { bookURL } = await prepareReaderWithUnsavedProgress(page, 'On');
+  await page.evaluate(() => history.back());
+  const dialog = readerExitDialog(page);
+  await expect(dialog).toBeVisible();
+  await dialog.getByRole('button', { name: 'Cancel' }).click();
+  await expect(page).toHaveURL(bookURL);
+});
+
 test('browser Back discards unsaved reader state and preserves Forward history', async ({
   page
 }) => {
@@ -198,13 +207,16 @@ test('browser Back discards unsaved reader state and preserves Forward history',
   await expect(page.locator('#miwake-page-footer span').nth(1)).toHaveText(initialProgress);
 });
 
-async function prepareReaderWithUnsavedProgress(page: Page) {
+async function prepareReaderWithUnsavedProgress(
+  page: Page,
+  savePositionOnExit: 'Off' | 'On' = 'Off'
+) {
   const bookURL = `/b?${new URLSearchParams({ t: fixtureTitle(LONG_BOOK) })}`;
 
   await useReaderSettings(page, {
     autoBookmark: 'Off',
     closeConfirmation: 'On',
-    savePositionOnExit: 'Off',
+    savePositionOnExit,
     viewMode: 'Paginated',
     writingMode: 'Horizontal'
   });

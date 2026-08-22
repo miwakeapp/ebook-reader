@@ -6,7 +6,7 @@
   import { showErrorDialog } from '$lib/components/log-report-dialog.svelte';
   import { showMessageDialog } from '$lib/components/message-dialog.svelte';
   import { syncState } from '$lib/data/sync/sync-store.svelte';
-  import SyncButton from '$lib/components/settings/sync/sync-button.svelte';
+  import SettingsButton from '$lib/components/settings/settings-button.svelte';
   import SettingsItem from '$lib/components/settings/settings-item.svelte';
   import SettingsSection from '$lib/components/settings/settings-section.svelte';
   import { showForceResyncDialog } from '$lib/components/settings/sync/force-resync-dialog.svelte';
@@ -156,8 +156,8 @@
           </div>
           <div class="mt-0.5 text-sm text-gray-600">{item.description}</div>
         </div>
-        <SyncButton variant={item.variant} disabled={item.disabled} onclick={item.onclick}
-          >{item.action}</SyncButton
+        <SettingsButton variant={item.variant} disabled={item.disabled} onclick={item.onclick}
+          >{item.action}</SettingsButton
         >
       </div>
     </SettingsItem>

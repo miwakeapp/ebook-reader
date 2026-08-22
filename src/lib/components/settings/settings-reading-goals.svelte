@@ -18,7 +18,7 @@
     getDateRangeLabel,
     type ReadingGoal
   } from '$lib/data/reading-goal';
-  import { database, readingGoal$, startDayHoursForTracker$ } from '$lib/data/store';
+  import { database, dayBoundaryTime$, readingGoal$ } from '$lib/data/store';
   import { userSaveReadingGoals, userDeleteReadingGoal } from '$lib/data/library';
   import { pluralize } from '$lib/functions/utils';
   import { getDateKey, secondsToMinutes } from '$lib/functions/statistic-util';
@@ -113,7 +113,7 @@
     }
 
     try {
-      const todayKey = getDateKey($startDayHoursForTracker$);
+      const todayKey = getDateKey($dayBoundaryTime$);
       const initialExistingReadingGoals = await database.getReadingGoalsForDateWindow(
         currentReadingGoalStartDate < $readingGoal$.goalStartDate
           ? currentReadingGoalStartDate || $readingGoal$.goalStartDate
@@ -150,7 +150,7 @@
           await showSettingsReadingGoalsMergeDialog({
             currentReadingGoal: $readingGoal$,
             newReadingGoal,
-            startDayHoursForTracker: $startDayHoursForTracker$
+            dayBoundaryTime: $dayBoundaryTime$
           }));
       } else {
         readingGoalsToInsert.push({ ...newReadingGoal, goalEndDate: '', goalOriginalEndDate: '' });
@@ -182,9 +182,7 @@
         $readingGoal$.goalStartDate &&
         $readingGoal$.goalStartDate === readingGoalToDelete.goalStartDate;
       const term =
-        getDateKey($startDayHoursForTracker$) >= readingGoalToDelete.goalStartDate
-          ? 'started'
-          : 'starting';
+        getDateKey($dayBoundaryTime$) >= readingGoalToDelete.goalStartDate ? 'started' : 'starting';
       dialogMessage = `The${
         isCurrentReadingGoal ? ` current reading goal ${term} on` : ' archived reading goal for '
       } ${dateRangeLabel} will be deleted${isCurrentReadingGoal ? ' without archiving.' : ''}`;

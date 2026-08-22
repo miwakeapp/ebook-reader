@@ -87,7 +87,7 @@
             type="radio"
             name={componentId}
             value={option.id}
-            class="mt-1 shrink-0 accent-blue-600"
+            class="mt-1 shrink-0"
             bind:group={value}
             aria-labelledby={optionLabelId}
             aria-describedby={option.description ? optionDescriptionId : undefined}

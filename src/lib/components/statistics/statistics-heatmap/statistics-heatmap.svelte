@@ -37,13 +37,13 @@
     lastStartDayOfWeek$,
     lastStatisticsEndDate$,
     lastStatisticsStartDate$,
-    startDayHoursForTracker$
+    dayBoundaryTime$
   } from '$lib/data/store';
   import {
     advanceDateDays,
     getDate,
     getDateString,
-    getStartHoursDate,
+    getDayBoundaryDate,
     getDaysBetween,
     getPreviousDayKey,
     secondsToMinutes
@@ -69,7 +69,7 @@
     statisticsTitleFilters
   }: Props = $props();
 
-  let today = $derived(getStartHoursDate($startDayHoursForTracker$));
+  let today = $derived(getDayBoundaryDate($dayBoundaryTime$));
   let todayKey = $derived(getDateString(today));
 
   const heatmapArrowButtonsWidth = 30;
@@ -84,7 +84,7 @@
   let heatmapElement: HTMLElement = $state()!;
   let heatmapDetailDataPopover: Popover = $state()!;
   let monthLabels: HeatmapMonthLabel[] = $state([...monthLabelList]);
-  let heatmapYear = $state(getStartHoursDate($startDayHoursForTracker$).getFullYear());
+  let heatmapYear = $state(getDayBoundaryDate($dayBoundaryTime$).getFullYear());
   let globalHeatmapData: StatisticsHeatmapData | ReadingGoalsHeatmapData = $state()!;
   const globalHeatmapDayData = new SvelteMap<
     string,
@@ -311,7 +311,11 @@
               ({ dateString: currentReadingStreakDateString } =
                 advanceDateDays(currentReadingStreakDate));
             } else if (currentReadingStreak.startDate && !daysRead.has(dateKey)) {
-              currentReadingStreak.endDate = getPreviousDayKey(0, currentReadingStreakDate, true);
+              currentReadingStreak.endDate = getPreviousDayKey(
+                '00:00',
+                currentReadingStreakDate,
+                true
+              );
               currentReadingStreak.duration += 1;
 
               streaks.push(currentReadingStreak);

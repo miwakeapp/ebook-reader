@@ -8,11 +8,17 @@
   import SettingsNumberInput from '$lib/components/settings/settings-number-input.svelte';
   import SettingsNumberItem from '$lib/components/settings/settings-number-item.svelte';
   import SettingsRadioItem from '$lib/components/settings/settings-radio-item.svelte';
+  import SettingsRestoreDefaults from '$lib/components/settings/settings-restore-defaults.svelte';
   import SettingsSection from '$lib/components/settings/settings-section.svelte';
   import SettingsSegmentedControl from '$lib/components/settings/settings-segmented-control.svelte';
   import SettingsSwitchItem from '$lib/components/settings/settings-switch-item.svelte';
   import { BlurMode } from '$lib/data/blur-mode';
   import { furiganaStyleOptions } from '$lib/data/furigana-style';
+  import {
+    appearanceSettingsDefaults,
+    appearanceSettingsLimits,
+    readerModeSettingsDefaults
+  } from '$lib/data/settings-defaults';
   import type { VerticalTextOrientation } from '$lib/data/vertical-text-orientation';
   import {
     blurImageMode$,
@@ -29,7 +35,10 @@
     textIndentation$,
     textMarginMode$,
     textMarginValue$,
-    verticalTextOrientation$
+    theme$,
+    verticalTextOrientation$,
+    viewMode$,
+    writingMode$
   } from '$lib/data/store';
   import { formatPageTitle } from '$lib/functions/format-page-title';
 
@@ -129,6 +138,27 @@
   onMount(() => {
     prettyTextWrapSupported = CSS.supports('text-wrap', 'pretty');
   });
+
+  function restoreDefaults() {
+    $writingMode$ = readerModeSettingsDefaults.writingMode;
+    $viewMode$ = readerModeSettingsDefaults.viewMode;
+    $simplifyBookTitles$ = appearanceSettingsDefaults.simplifyBookTitles;
+    $theme$ = appearanceSettingsDefaults.theme;
+    $fontFamilyGroupOne$ = appearanceSettingsDefaults.fontFamilyGroupOne;
+    $fontFamilyGroupTwo$ = appearanceSettingsDefaults.fontFamilyGroupTwo;
+    $fontSize$ = appearanceSettingsDefaults.fontSize;
+    $lineHeight$ = appearanceSettingsDefaults.lineHeight;
+    $textIndentation$ = appearanceSettingsDefaults.textIndentation;
+    $textMarginMode$ = appearanceSettingsDefaults.textMarginMode;
+    $textMarginValue$ = appearanceSettingsDefaults.textMarginValue;
+    $enableTextJustification$ = appearanceSettingsDefaults.enableTextJustification;
+    $furiganaStyle$ = appearanceSettingsDefaults.furiganaStyle;
+    $blurImageMode$ = appearanceSettingsDefaults.blurImageMode;
+    $prioritizeReaderStyles$ = appearanceSettingsDefaults.prioritizeReaderStyles;
+    $enableTextWrapPretty$ = appearanceSettingsDefaults.enableTextWrapPretty;
+    $verticalTextOrientation$ = appearanceSettingsDefaults.verticalTextOrientation;
+    $enableFontVPAL$ = appearanceSettingsDefaults.enableFontVPAL;
+  }
 </script>
 
 <svelte:head>
@@ -170,7 +200,14 @@
       <FontPicker group="sans-serif" bind:selectedFont={$fontFamilyGroupTwo$} />
     </SettingsItem>
 
-    <SettingsNumberItem label="Text size" bind:value={$fontSize$} unit="px" min={1} step={1} />
+    <SettingsNumberItem
+      label="Text size"
+      bind:value={$fontSize$}
+      unit="px"
+      min={appearanceSettingsLimits.fontSize.minimum}
+      max={appearanceSettingsLimits.fontSize.maximum}
+      step={1}
+    />
 
     <SettingsNumberItem
       label="Line height"
@@ -244,8 +281,8 @@
 
   <SettingsSection
     class="lg:[grid-area:advanced]"
-    title="Advanced typography"
-    description="Fine-tune how the reader handles book styles and browser typography features."
+    title="Advanced"
+    description="Fine-tune less common typography options or restore this page’s original settings."
     collapsible
   >
     <SettingsSwitchItem
@@ -275,6 +312,19 @@
       applicability={verticalTextApplicability}
       bind:value={$enableFontVPAL$}
     />
+
+    <SettingsItem
+      label="Restore appearance defaults"
+      description="Returns the settings on this page to their original values without deleting custom themes or imported fonts."
+    >
+      {#snippet control()}
+        <SettingsRestoreDefaults
+          pageName="Appearance"
+          message="This restores the settings shown on this page, including Text direction and Reading flow, to their original values. Custom themes and imported fonts will not be deleted."
+          onrestore={restoreDefaults}
+        />
+      {/snippet}
+    </SettingsItem>
   </SettingsSection>
 </div>
 

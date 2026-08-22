@@ -34,14 +34,14 @@ import {
   lastStatisticsEndDate$,
   lastStatisticsRangeTemplate$,
   lastStatisticsStartDate$,
-  startDayHoursForTracker$
+  dayBoundaryTime$
 } from '$lib/data/store';
 import {
   advanceDateDays,
   getDateKey,
   getDateString,
   getNumberFromObject,
-  getStartHoursDate,
+  getDayBoundaryDate,
   secondsToMinutes
 } from '$lib/functions/statistic-util';
 import { pluralize } from '$lib/functions/utils';
@@ -69,7 +69,7 @@ export class StatisticsController {
   #lastStatisticsEndDate = fromStore(lastStatisticsEndDate$);
   #lastStatisticsRangeTemplate = fromStore(lastStatisticsRangeTemplate$);
   #lastStatisticsStartDate = fromStore(lastStatisticsStartDate$);
-  #startDayHoursForTracker = fromStore(startDayHoursForTracker$);
+  #dayBoundaryTime = fromStore(dayBoundaryTime$);
 
   isLoading = $state(true);
   statisticsTitleFilters = $state(new SvelteMap<string, boolean>());
@@ -89,14 +89,14 @@ export class StatisticsController {
 
   constructor() {
     $effect(() => {
-      const startDayHoursForTracker = this.#startDayHoursForTracker.current;
+      const dayBoundaryTime = this.#dayBoundaryTime.current;
 
       if (
         this.statisticsTitleFilters.size &&
         this.#lastPrimaryReadingDataAggregationMode.current &&
         this.#lastStatisticsStartDate.current &&
         this.#lastStatisticsEndDate.current &&
-        startDayHoursForTracker !== undefined
+        dayBoundaryTime !== undefined
       ) {
         untrack(() => this.updateStatisticsData());
       }
@@ -105,10 +105,10 @@ export class StatisticsController {
     $effect(() => {
       const rangeTemplate = this.#lastStatisticsRangeTemplate.current;
       const startDayOfWeek = this.#lastStartDayOfWeek.current;
-      const startDayHoursForTracker = this.#startDayHoursForTracker.current;
+      const dayBoundaryTime = this.#dayBoundaryTime.current;
 
       if (rangeTemplate || startDayOfWeek > -1) {
-        untrack(() => this.#setSelectedStatisticsDays(getStartHoursDate(startDayHoursForTracker)));
+        untrack(() => this.#setSelectedStatisticsDays(getDayBoundaryDate(dayBoundaryTime)));
       }
     });
   }
@@ -385,8 +385,8 @@ export class StatisticsController {
   }
 
   handleSelectedStatisticsDateChange({ dateString, isStartDate }: StatisticsDateChange) {
-    const referenceDate = getStartHoursDate(this.#startDayHoursForTracker.current);
-    const todayKey = getDateKey(this.#startDayHoursForTracker.current, referenceDate);
+    const referenceDate = getDayBoundaryDate(this.#dayBoundaryTime.current);
+    const todayKey = getDateKey(this.#dayBoundaryTime.current, referenceDate);
 
     this.#lastStatisticsRangeTemplate.current = StatisticsRangeTemplate.CUSTOM;
 
@@ -407,9 +407,7 @@ export class StatisticsController {
     this.#setSelectedStatisticsDays(referenceDate);
   }
 
-  #setSelectedStatisticsDays(
-    referenceDate = getStartHoursDate(this.#startDayHoursForTracker.current)
-  ) {
+  #setSelectedStatisticsDays(referenceDate = getDayBoundaryDate(this.#dayBoundaryTime.current)) {
     switch (this.#lastStatisticsRangeTemplate.current) {
       case StatisticsRangeTemplate.TODAY: {
         const dateKey = getDateString(referenceDate);

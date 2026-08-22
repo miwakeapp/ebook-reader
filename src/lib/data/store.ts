@@ -18,6 +18,13 @@ import { BlurMode } from '$lib/data/blur-mode';
 import type { UserFont } from '$lib/data/fonts';
 import type { MergeMode } from '$lib/data/merge-mode';
 import type { ReadingGoal } from '$lib/data/reading-goal';
+import {
+  appearanceSettingsDefaults,
+  appearanceSettingsLimits,
+  readerModeSettingsDefaults,
+  readingSettingsDefaults,
+  trackingSettingsDefaults
+} from '$lib/data/settings-defaults';
 import { SortDirection, type SortOption } from '$lib/functions/sorting';
 import { AutoReplicationType } from '$lib/functions/replication/replication-options';
 import { derived, type Writable } from 'svelte/store';
@@ -30,7 +37,6 @@ import {
   booleanLocalStorageStore,
   numberLocalStorageStore,
   objectLocalStorageStore,
-  registerLegacyLocalStoragePreference,
   setLocalStorageStore,
   stringLocalStorageStore
 } from './internal/persistent-local-storage-store';
@@ -41,7 +47,12 @@ import type { VerticalTextOrientation } from './vertical-text-orientation';
 import { ViewMode } from './view-mode';
 import type { WritingMode } from './writing-mode';
 
-export const theme$ = stringLocalStorageStore<string>('theme', 'light-theme');
+// Normalize redesigned value domains before their stores snapshot `localStorage`. This also handles
+// values restored from an older backup on the ensuing reload without making Settings-page visits
+// mutate unrelated preferences.
+normalizeRedesignedSettingValues();
+
+export const theme$ = stringLocalStorageStore<string>('theme', appearanceSettingsDefaults.theme);
 export const customThemes$ = objectLocalStorageStore<Record<string, ThemeOption>>(
   'customThemes',
   {}
@@ -49,83 +60,155 @@ export const customThemes$ = objectLocalStorageStore<Record<string, ThemeOption>
 export const multiplier$ = numberLocalStorageStore('autoScrollMultiplier', 20);
 export const fontFamilyGroupOne$ = stringLocalStorageStore<string>(
   'fontFamilyGroupOne',
-  'Noto Serif JP'
+  appearanceSettingsDefaults.fontFamilyGroupOne
 );
 export const fontFamilyGroupTwo$ = stringLocalStorageStore<string>(
   'fontFamilyGroupTwo',
-  'Noto Sans JP'
+  appearanceSettingsDefaults.fontFamilyGroupTwo
 );
-export const fontSize$ = numberLocalStorageStore('fontSize', 20);
-export const lineHeight$ = numberLocalStorageStore('lineHeight', 1.65);
-export const textIndentation$ = numberLocalStorageStore('textIndentation', 0);
-export const textMarginValue$ = numberLocalStorageStore('textMarginValue', 0);
+export const fontSize$ = numberLocalStorageStore('fontSize', appearanceSettingsDefaults.fontSize);
+export const lineHeight$ = numberLocalStorageStore(
+  'lineHeight',
+  appearanceSettingsDefaults.lineHeight
+);
+export const textIndentation$ = numberLocalStorageStore(
+  'textIndentation',
+  appearanceSettingsDefaults.textIndentation
+);
+export const textMarginValue$ = numberLocalStorageStore(
+  'textMarginValue',
+  appearanceSettingsDefaults.textMarginValue
+);
 export const blurImageMode$ = stringLocalStorageStore<BlurMode>(
   'hideSpoilerImageMode',
-  BlurMode.OFF
+  appearanceSettingsDefaults.blurImageMode
 );
 export const furiganaStyle$ = stringLocalStorageStore<FuriganaStyle>(
   'furiganaStyle',
-  FuriganaStyle.Default
+  appearanceSettingsDefaults.furiganaStyle
 );
-export const writingMode$ = stringLocalStorageStore<WritingMode>('writingMode', 'vertical-rl');
-export const enableFontVPAL$ = booleanLocalStorageStore('enableFontVPAL', false);
+export const writingMode$ = stringLocalStorageStore<WritingMode>(
+  'writingMode',
+  readerModeSettingsDefaults.writingMode
+);
+export const enableFontVPAL$ = booleanLocalStorageStore(
+  'enableFontVPAL',
+  appearanceSettingsDefaults.enableFontVPAL
+);
 export const verticalTextOrientation$ = stringLocalStorageStore<VerticalTextOrientation>(
   'verticalTextOrientation',
-  'mixed'
+  appearanceSettingsDefaults.verticalTextOrientation
 );
-export const prioritizeReaderStyles$ = booleanLocalStorageStore('prioritizeReaderStyles', false);
-export const enableTextJustification$ = booleanLocalStorageStore('enableTextJustification', false);
-export const enableTextWrapPretty$ = booleanLocalStorageStore('enableTextWrapPretty', false);
-export const textMarginMode$ = stringLocalStorageStore<TextMarginMode>('textMarginMode', 'auto');
-export const enableReaderWakeLock$ = booleanLocalStorageStore('enableReaderWakeLock', false);
+export const prioritizeReaderStyles$ = booleanLocalStorageStore(
+  'prioritizeReaderStyles',
+  appearanceSettingsDefaults.prioritizeReaderStyles
+);
+export const enableTextJustification$ = booleanLocalStorageStore(
+  'enableTextJustification',
+  appearanceSettingsDefaults.enableTextJustification
+);
+export const enableTextWrapPretty$ = booleanLocalStorageStore(
+  'enableTextWrapPretty',
+  appearanceSettingsDefaults.enableTextWrapPretty
+);
+export const textMarginMode$ = stringLocalStorageStore<TextMarginMode>(
+  'textMarginMode',
+  appearanceSettingsDefaults.textMarginMode
+);
+export const enableReaderWakeLock$ = booleanLocalStorageStore(
+  'enableReaderWakeLock',
+  readingSettingsDefaults.enableReaderWakeLock
+);
 export const verticalMode$ = derived(writingMode$, (writingMode) => writingMode === 'vertical-rl');
-export const showCharacterCounter$ = booleanLocalStorageStore('showCharacterCounter', true);
-export const showPercentage$ = booleanLocalStorageStore('showPercentage', true);
+export const showCharacterCounter$ = booleanLocalStorageStore(
+  'showCharacterCounter',
+  readingSettingsDefaults.showCharacterCounter
+);
+export const showPercentage$ = booleanLocalStorageStore(
+  'showPercentage',
+  readingSettingsDefaults.showPercentage
+);
 export { simplifyBookTitles$ } from '$lib/data/book-title-settings';
 export const showFooterChapterCharacterCounter$ = booleanLocalStorageStore(
   'showFooterChapterCharacterCounter',
-  false
+  readingSettingsDefaults.showFooterChapterCharacterCounter
 );
 export const showFooterChapterPercentage$ = booleanLocalStorageStore(
   'showFooterChapterPercentage',
-  false
+  readingSettingsDefaults.showFooterChapterPercentage
 );
-export const viewMode$ = stringLocalStorageStore<ViewMode>('viewMode', ViewMode.Paginated);
+export const viewMode$ = stringLocalStorageStore<ViewMode>(
+  'viewMode',
+  readerModeSettingsDefaults.viewMode
+);
 
-export const secondDimensionMaxValue$ = numberLocalStorageStore('secondDimensionMaxValue', 0);
-export const firstDimensionMargin$ = numberLocalStorageStore('firstDimensionMargin', 0);
+export const secondDimensionMaxValue$ = numberLocalStorageStore(
+  'secondDimensionMaxValue',
+  readingSettingsDefaults.secondDimensionMaxValue
+);
+export const firstDimensionMargin$ = numberLocalStorageStore(
+  'firstDimensionMargin',
+  readingSettingsDefaults.firstDimensionMargin
+);
 
-export const swipeThreshold$ = numberLocalStorageStore('swipeThreshold', 10);
+export const swipeThreshold$ = numberLocalStorageStore(
+  'swipeThreshold',
+  readingSettingsDefaults.swipeThreshold
+);
 
-export const disableWheelNavigation$ = booleanLocalStorageStore('disableWheelNavigation', false);
+export const disableWheelNavigation$ = booleanLocalStorageStore(
+  'disableWheelNavigation',
+  !readingSettingsDefaults.wheelNavigationEnabled
+);
 
 export const wheelNavigationEnabled$ = invertedBooleanStore(disableWheelNavigation$);
 
-export const avoidPageBreak$ = booleanLocalStorageStore('avoidPageBreak', false);
+export const avoidPageBreak$ = booleanLocalStorageStore(
+  'avoidPageBreak',
+  readingSettingsDefaults.avoidPageBreak
+);
 
 export const pauseTrackerOnCustomPointChange$ = booleanLocalStorageStore(
   'pauseTrackerOnCustomPointChange',
-  true
+  readingSettingsDefaults.pauseTrackerOnCustomPointChange
 );
 
 export const selectionToBookmarkEnabled$ = booleanLocalStorageStore(
   'selectionToBookmarkEnabled',
-  false
+  readingSettingsDefaults.selectionToBookmarkEnabled
 );
 
-export const enableTapEdgeToFlip$ = booleanLocalStorageStore('enableTapEdgeToFlip', false);
+export const enableTapEdgeToFlip$ = booleanLocalStorageStore(
+  'enableTapEdgeToFlip',
+  readingSettingsDefaults.enableTapEdgeToFlip
+);
 
-export const confirmClose$ = booleanLocalStorageStore('confirmClose', false);
+export const confirmClose$ = booleanLocalStorageStore(
+  'confirmClose',
+  readingSettingsDefaults.confirmClose
+);
 
-export const manualBookmark$ = booleanLocalStorageStore('manualBookmark', false);
+export const manualBookmark$ = booleanLocalStorageStore(
+  'manualBookmark',
+  !readingSettingsDefaults.savePositionOnExit
+);
 
 export const savePositionOnExit$ = invertedBooleanStore(manualBookmark$);
 
-export const autoBookmark$ = booleanLocalStorageStore('autoBookmark', true);
+export const autoBookmark$ = booleanLocalStorageStore(
+  'autoBookmark',
+  readingSettingsDefaults.autoBookmark
+);
 
-export const autoBookmarkTime$ = numberLocalStorageStore('autoBookmarkTime', 3);
+export const autoBookmarkTime$ = numberLocalStorageStore(
+  'autoBookmarkTime',
+  readingSettingsDefaults.autoBookmarkTime
+);
 
-export const pageColumns$ = numberLocalStorageStore('pageColumns', 0);
+export const pageColumns$ = numberLocalStorageStore(
+  'pageColumns',
+  readingSettingsDefaults.pageColumns
+);
 
 export const importHTMLFixMode$ = stringLocalStorageStore<ImportHTMLFixMode>(
   'importHTMLFixMode',
@@ -148,14 +231,23 @@ export const autoReplication$ = stringLocalStorageStore<AutoReplicationType>(
 // bookmarks; the old stored value is deliberately not migrated.
 export const keepLocalReadingDataOnDeletion$ = booleanLocalStorageStore(
   'keepLocalReadingDataOnDeletion',
-  true
+  trackingSettingsDefaults.keepLocalReadingDataOnDeletion
 );
 
-export const overwriteBookCompletion$ = booleanLocalStorageStore('overwriteBookCompletion', false);
+export const overwriteBookCompletion$ = booleanLocalStorageStore(
+  'overwriteBookCompletion',
+  trackingSettingsDefaults.overwriteBookCompletion
+);
 
-export const startDayHoursForTracker$ = numberLocalStorageStore('startDayHoursForTracker', 0);
+export const dayBoundaryTime$ = stringLocalStorageStore<string>(
+  'dayBoundaryTime',
+  trackingSettingsDefaults.dayBoundaryTime
+);
 
-export const statisticsEnabled$ = booleanLocalStorageStore('statisticsEnabled', false);
+export const statisticsEnabled$ = booleanLocalStorageStore(
+  'statisticsEnabled',
+  trackingSettingsDefaults.statisticsEnabled
+);
 
 export const statisticsMergeMode$ = stringLocalStorageStore<MergeMode>(
   'statisticsMergeMode',
@@ -169,40 +261,52 @@ export const readingGoalsMergeMode$ = stringLocalStorageStore<MergeMode>(
 
 export const trackerAutoPause$ = stringLocalStorageStore<TrackerAutoPause>(
   'trackerAutoPause',
-  TrackerAutoPause.MODERATE
+  trackingSettingsDefaults.trackerAutoPause
 );
 
-export const openTrackerOnCompletion$ = booleanLocalStorageStore('openTrackerOnCompletion', true);
+export const openTrackerOnCompletion$ = booleanLocalStorageStore(
+  'openTrackerOnCompletion',
+  trackingSettingsDefaults.openTrackerOnCompletion
+);
 
 export const addCharactersOnCompletion$ = booleanLocalStorageStore(
   'addCharactersOnCompletion',
-  false
+  trackingSettingsDefaults.addCharactersOnCompletion
 );
 
-export const trackerAutostartTime$ = numberLocalStorageStore('trackerAutoStartTime', 0);
+export const trackerAutostartTime$ = numberLocalStorageStore(
+  'trackerAutoStartTime',
+  trackingSettingsDefaults.trackerAutostartTime
+);
 
-export const trackerIdleTime$ = numberLocalStorageStore('trackerIdleTime', 0);
+export const trackerIdleTime$ = numberLocalStorageStore(
+  'trackerIdleTime',
+  trackingSettingsDefaults.trackerIdleTime
+);
 
 export const trackerForwardSkipThreshold$ = numberLocalStorageStore(
   'trackerForwardSkipThreshold',
-  2700
+  trackingSettingsDefaults.trackerForwardSkipThreshold
 );
 
 export const trackerBackwardSkipThreshold$ = numberLocalStorageStore(
   'trackerBackwardSkipThreshold',
-  2700
+  trackingSettingsDefaults.trackerBackwardSkipThreshold
 );
 
 export const trackerSkipThresholdAction$ = stringLocalStorageStore<TrackerSkipThresholdAction>(
   'trackerSkipThresholdAction',
-  TrackerSkipThresholdAction.IGNORE
+  trackingSettingsDefaults.trackerSkipThresholdAction
 );
 
-export const trackerPopupDetection$ = booleanLocalStorageStore('trackerPopupDetection', false);
+export const trackerPopupDetection$ = booleanLocalStorageStore(
+  'trackerPopupDetection',
+  trackingSettingsDefaults.trackerPopupDetection
+);
 
 export const adjustStatisticsAfterIdleTime$ = booleanLocalStorageStore(
   'adjustStatisticsAfterIdleTime',
-  true
+  trackingSettingsDefaults.adjustStatisticsAfterIdleTime
 );
 
 export const readingGoal$ = objectLocalStorageStore<ReadingGoal>('readingGoal', {
@@ -318,24 +422,6 @@ export const booklistSortOptions$ = objectLocalStorageStore<SortOption>('booklis
 const DEFAULT_VERTICAL_READING_MARKER_POSITION = 100;
 const DEFAULT_HORIZONTAL_READING_MARKER_POSITION = 0;
 
-registerLegacyLocalStoragePreference('customReadingPointEnabled');
-migrateLegacyReadingMarkerSetting();
-
-function migrateLegacyReadingMarkerSetting() {
-  if (appLocalStorage.getItem('customReadingPointEnabled') === '0') {
-    appLocalStorage.setItem(
-      'verticalCustomReadingPosition',
-      `${DEFAULT_VERTICAL_READING_MARKER_POSITION}`
-    );
-    appLocalStorage.setItem(
-      'horizontalCustomReadingPosition',
-      `${DEFAULT_HORIZONTAL_READING_MARKER_POSITION}`
-    );
-  }
-
-  appLocalStorage.removeItem('customReadingPointEnabled');
-}
-
 export const verticalCustomReadingPosition$ = numberLocalStorageStore(
   'verticalCustomReadingPosition',
   DEFAULT_VERTICAL_READING_MARKER_POSITION
@@ -347,3 +433,56 @@ export const horizontalCustomReadingPosition$ = numberLocalStorageStore(
 );
 
 export const userFonts$ = arrayLocalStorageStore<UserFont>('userfonts', []);
+
+function normalizeRedesignedSettingValues() {
+  normalizeStoredNumber(
+    'fontSize',
+    (value) =>
+      clamp(
+        value,
+        appearanceSettingsLimits.fontSize.minimum,
+        appearanceSettingsLimits.fontSize.maximum
+      ),
+    appearanceSettingsDefaults.fontSize
+  );
+  normalizeStoredNumber('firstDimensionMargin', (value) => normalizeOptionalRange(value, 1, 1000));
+  normalizeStoredNumber('secondDimensionMaxValue', (value) =>
+    normalizeOptionalRange(value, 100, 4000)
+  );
+  normalizeStoredNumber(
+    'swipeThreshold',
+    (value) => (value <= 15 ? 10 : value <= 55 ? 40 : 80),
+    10
+  );
+  normalizeStoredNumber('autoBookmarkTime', (value) => (value < 1 ? 3 : Math.min(value, 300)), 3);
+  normalizeStoredNumber('pageColumns', (value) => clamp(Math.round(value), 0, 2));
+  normalizeStoredNumber('trackerAutoStartTime', (value) =>
+    value <= 0 ? 0 : clamp(Math.floor(value), 1, 300)
+  );
+  normalizeStoredNumber('trackerIdleTime', (value) =>
+    value <= 0 ? 0 : clamp(Math.floor(value), 30, 43_200)
+  );
+}
+
+function normalizeStoredNumber(
+  key: string,
+  normalize: (value: number) => number,
+  invalidFallback = 0
+) {
+  const storedValue = appLocalStorage.getItem(key);
+  if (!storedValue) return;
+
+  const parsedValue = Number(storedValue);
+  const normalizedValue = normalize(Number.isFinite(parsedValue) ? parsedValue : invalidFallback);
+  if (normalizedValue !== parsedValue) {
+    appLocalStorage.setItem(key, `${normalizedValue}`);
+  }
+}
+
+function normalizeOptionalRange(value: number, minimum: number, maximum: number) {
+  return value <= 0 ? 0 : clamp(value, minimum, maximum);
+}
+
+function clamp(value: number, minimum: number, maximum: number) {
+  return Math.min(maximum, Math.max(minimum, value));
+}

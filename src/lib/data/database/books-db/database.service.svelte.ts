@@ -210,7 +210,7 @@ export class DatabaseService {
 
   async setFirstBookRead(
     bookTitle: string,
-    startDaysHoursForTracker: number,
+    dayBoundaryTime: string,
     existingStatistic?: BooksDbStatistic
   ) {
     const db = await this.db;
@@ -225,7 +225,7 @@ export class DatabaseService {
       return [firstStatistic.dateKey, false];
     }
 
-    const dateKey = getDateKey(startDaysHoursForTracker);
+    const dateKey = getDateKey(dayBoundaryTime);
     const tx = db.transaction(['statistic', 'lastModified'], 'readwrite');
 
     try {

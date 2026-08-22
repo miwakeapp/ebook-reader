@@ -14,7 +14,7 @@
   import { providerLabel } from '$lib/components/settings/sync/sync-utils';
   import SyncAlert from '$lib/components/settings/sync/sync-alert.svelte';
   import SyncBadge from '$lib/components/settings/sync/sync-badge.svelte';
-  import SyncButton from '$lib/components/settings/sync/sync-button.svelte';
+  import SettingsButton from '$lib/components/settings/settings-button.svelte';
   import SyncLastSyncedTime from '$lib/components/settings/sync/sync-last-synced-time.svelte';
   import SyncRow from '$lib/components/settings/sync/sync-row.svelte';
   import SettingsSection from '$lib/components/settings/settings-section.svelte';
@@ -233,9 +233,7 @@
           </div>
         {/snippet}
         {#snippet actions()}
-          <SyncButton variant="primary" disabled={busy} onclick={() => onPick('gdrive')}>
-            Connect
-          </SyncButton>
+          <SettingsButton disabled={busy} onclick={() => onPick('gdrive')}>Connect</SettingsButton>
         {/snippet}
       </SyncRow>
 
@@ -262,9 +260,9 @@
           </div>
         {/snippet}
         {#snippet actions()}
-          <SyncButton variant="primary" disabled={busy} onclick={() => onPick('onedrive')}>
+          <SettingsButton disabled={busy} onclick={() => onPick('onedrive')}>
             Connect
-          </SyncButton>
+          </SettingsButton>
         {/snippet}
       </SyncRow>
 
@@ -278,9 +276,9 @@
             </div>
           {/snippet}
           {#snippet actions()}
-            <SyncButton variant="primary" disabled={busy} onclick={() => onPick('fs')}>
+            <SettingsButton disabled={busy} onclick={() => onPick('fs')}>
               Choose folder
-            </SyncButton>
+            </SettingsButton>
           {/snippet}
         </SyncRow>
       {/if}
@@ -339,11 +337,11 @@
       {/snippet}
       {#snippet actions()}
         {#if health.status === 'reauth-required' || health.status === 'permission-required'}
-          <SyncButton variant="warning" onclick={onReconnect}>Reconnect</SyncButton>
+          <SettingsButton variant="warning" onclick={onReconnect}>Reconnect</SettingsButton>
         {:else if health.status === 'error'}
-          <SyncButton onclick={onRetry}>Retry</SyncButton>
+          <SettingsButton onclick={onRetry}>Retry</SettingsButton>
         {:else}
-          <SyncButton onclick={onDisconnect}>Disconnect</SyncButton>
+          <SettingsButton onclick={onDisconnect}>Disconnect</SettingsButton>
         {/if}
       {/snippet}
     </SyncRow>
@@ -359,19 +357,19 @@
       {#snippet actions()}
         <div class="flex flex-wrap gap-2">
           {#if activeCloud.provider !== SyncEndpointType.GDRIVE}
-            <SyncButton disabled={busy} onclick={() => onPick('gdrive')}>
+            <SettingsButton disabled={busy} onclick={() => onPick('gdrive')}>
               Switch to Google Drive
-            </SyncButton>
+            </SettingsButton>
           {/if}
           {#if activeCloud.provider !== SyncEndpointType.ONEDRIVE}
-            <SyncButton disabled={busy} onclick={() => onPick('onedrive')}>
+            <SettingsButton disabled={busy} onclick={() => onPick('onedrive')}>
               Switch to OneDrive
-            </SyncButton>
+            </SettingsButton>
           {/if}
           {#if supportsFsPicker}
-            <SyncButton disabled={busy} onclick={() => onPick('fs')}>
+            <SettingsButton disabled={busy} onclick={() => onPick('fs')}>
               Switch to a sync folder
-            </SyncButton>
+            </SettingsButton>
           {/if}
         </div>
       {/snippet}
@@ -412,12 +410,12 @@
       {/snippet}
       {#snippet actions()}
         {#if health.status === 'permission-required' || health.status === 'reauth-required'}
-          <SyncButton variant="warning" onclick={onGrantFsAccess}>Grant access</SyncButton>
+          <SettingsButton variant="warning" onclick={onGrantFsAccess}>Grant access</SettingsButton>
         {:else if health.status === 'error'}
-          <SyncButton onclick={onRetry}>Retry</SyncButton>
+          <SettingsButton onclick={onRetry}>Retry</SettingsButton>
         {:else}
-          <SyncButton onclick={() => onPick('fs')}>Change folder</SyncButton>
-          <SyncButton onclick={onDisconnect}>Disconnect</SyncButton>
+          <SettingsButton onclick={() => onPick('fs')}>Change folder</SettingsButton>
+          <SettingsButton onclick={onDisconnect}>Disconnect</SettingsButton>
         {/if}
       {/snippet}
     </SyncRow>
@@ -432,12 +430,12 @@
       {/snippet}
       {#snippet actions()}
         <div class="flex flex-wrap gap-2">
-          <SyncButton disabled={busy} onclick={() => onPick('gdrive')}>
+          <SettingsButton disabled={busy} onclick={() => onPick('gdrive')}>
             Switch to Google Drive
-          </SyncButton>
-          <SyncButton disabled={busy} onclick={() => onPick('onedrive')}>
+          </SettingsButton>
+          <SettingsButton disabled={busy} onclick={() => onPick('onedrive')}>
             Switch to OneDrive
-          </SyncButton>
+          </SettingsButton>
         </div>
       {/snippet}
     </SyncRow>

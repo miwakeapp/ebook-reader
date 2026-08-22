@@ -20,7 +20,6 @@
     value: T;
     applicability?: SettingsApplicabilityDetails;
     disabled?: boolean;
-    inset?: boolean;
     optionControl?: Snippet<[T, { labelledBy: string }]>;
   }
 
@@ -33,12 +32,11 @@
     value = $bindable(),
     applicability,
     disabled = false,
-    inset = false,
     optionControl
   }: Props = $props();
 </script>
 
-<SettingsItem {disabled} {inset}>
+<SettingsItem {disabled}>
   <SettingsRadioGroup
     {legend}
     {labelledBy}
