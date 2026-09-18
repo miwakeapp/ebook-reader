@@ -547,24 +547,43 @@
     for (const container of contentEl.querySelectorAll<HTMLElement>(
       '.ttu-illustration-container'
     )) {
-      const containerContentSize = constrainElement(container, pageSize);
-      for (const media of container.querySelectorAll<HTMLElement | SVGElement>('img, svg')) {
+      const mediaElements = container.querySelectorAll<HTMLElement | SVGElement>('img, svg');
+      // A shared container must grow in the block direction to accommodate multiple images.
+      // Capping it at one page lets later images overflow into the following text.
+      const containerContentSize = constrainElement(
+        container,
+        pageSize,
+        mediaElements.length > 1 ? 'inline' : 'both'
+      );
+      for (const media of mediaElements) {
         constrainElement(media, containerContentSize);
+        if (media instanceof HTMLImageElement) {
+          fitImageAspectRatio(media);
+        }
       }
     }
   }
 
   function constrainElement(
     element: HTMLElement | SVGElement,
-    available: { height: number; width: number }
+    available: { height: number; width: number },
+    dimensions: 'inline' | 'both' = 'both'
   ) {
     const style = getComputedStyle(element);
     const borderBox = {
       height: remainingSpace(available.height, style.marginTop, style.marginBottom),
       width: remainingSpace(available.width, style.marginLeft, style.marginRight)
     };
-    element.style.setProperty('max-height', `${borderBox.height}px`, 'important');
-    element.style.setProperty('max-width', `${borderBox.width}px`, 'important');
+    if (dimensions === 'inline') {
+      element.style.setProperty(
+        'max-inline-size',
+        `${verticalMode ? borderBox.height : borderBox.width}px`,
+        'important'
+      );
+    } else {
+      element.style.setProperty('max-height', `${borderBox.height}px`, 'important');
+      element.style.setProperty('max-width', `${borderBox.width}px`, 'important');
+    }
 
     return {
       height: remainingSpace(
@@ -582,6 +601,44 @@
         style.paddingRight
       )
     };
+  }
+
+  function fitImageAspectRatio(image: HTMLImageElement) {
+    if (!image.naturalWidth || !image.naturalHeight) return;
+
+    const style = getComputedStyle(image);
+    const bounds = image.getBoundingClientRect();
+    if (
+      bounds.width < Number.parseFloat(style.maxWidth) - 1 &&
+      bounds.height < Number.parseFloat(style.maxHeight) - 1
+    ) {
+      return;
+    }
+
+    // `object-fit: contain` shrinks the picture but leaves its box unchanged. When a page limit
+    // shrinks an illustration, remove that extra space so it can still fit beside nearby text.
+    const contentWidth = remainingSpace(
+      bounds.width,
+      style.borderLeftWidth,
+      style.borderRightWidth,
+      style.paddingLeft,
+      style.paddingRight
+    );
+    const contentHeight = remainingSpace(
+      bounds.height,
+      style.borderTopWidth,
+      style.borderBottomWidth,
+      style.paddingTop,
+      style.paddingBottom
+    );
+    const aspectRatio = image.naturalWidth / image.naturalHeight;
+    if (contentWidth > contentHeight * aspectRatio) {
+      const width = contentHeight * aspectRatio + bounds.width - contentWidth;
+      image.style.setProperty('max-width', `${width}px`, 'important');
+    } else {
+      const height = contentWidth / aspectRatio + bounds.height - contentHeight;
+      image.style.setProperty('max-height', `${height}px`, 'important');
+    }
   }
 
   function remainingSpace(size: number, ...spacing: string[]) {

@@ -72,7 +72,7 @@ const verticalPaginatedConfigurations: {
   viewport: { height: number; width: number };
 }[] = [
   {
-    expectedNestedDimensions: { height: 636, width: 936 },
+    expectedNestedDimensions: { height: 636, width: (636 * 128) / 87 },
     name: 'desktop pages',
     viewport: { height: 700, width: 1_000 }
   },
@@ -141,13 +141,86 @@ for (const configuration of verticalPaginatedConfigurations) {
           top: 0
         });
       if (testCase.expectedDimensions) {
-        await expect.poll(() => mediaDimensions(media)).toMatchObject(testCase.expectedDimensions);
+        for (const dimension of ['height', 'width'] as const) {
+          await expect
+            .poll(async () => (await mediaDimensions(media))[dimension])
+            .toBeCloseTo(testCase.expectedDimensions[dimension], 1);
+        }
       }
       if (testCase.followingText) {
         expect(await overlappingArea(media, page.locator(testCase.followingText))).toBe(0);
       }
     }
   });
+}
+
+for (const writingMode of ['Horizontal', 'Vertical']) {
+  for (const blurImages of ['Off', 'All']) {
+    for (const viewport of [
+      { width: 1_000, height: 700 },
+      { width: 1_280, height: 700 },
+      { width: 390, height: 844 }
+    ]) {
+      test(`paginated ${writingMode.toLowerCase()} reader fits consecutive illustrations at width ${viewport.width} with blur ${blurImages.toLowerCase()}`, async ({
+        page
+      }) => {
+        await page.setViewportSize({ width: 1_000, height: 700 });
+        await useReaderSettings(page, {
+          blurImages,
+          fontSize: '20',
+          viewMode: 'Paginated',
+          writingMode
+        });
+        await importBookFixtures(page, [MEDIA_SIZING_BOOK]);
+        await page.setViewportSize(viewport);
+        await openBookFromManage(page, MEDIA_SIZING_BOOK);
+        await expectBookReaderText(page, MEDIA_SIZING_BOOK);
+        await openTOC(page);
+        await page.getByTitle('Go to Consecutive illustrations').click();
+
+        const first = page.getByAltText('First consecutive illustration');
+        const second = page.getByAltText('Second consecutive illustration');
+        await expect(second).toBeAttached();
+        await expect
+          .poll(() => second.evaluate((element) => element.style.getPropertyPriority('max-height')))
+          .toBe('important');
+        const followingText = page.locator('#following-consecutive-text');
+        await expect.poll(() => overlappingArea(first, followingText)).toBe(0);
+        await expect.poll(() => overlappingArea(second, followingText)).toBe(0);
+
+        for (const media of [first, second]) {
+          await expect
+            .poll(async () => {
+              const area = await visibleMediaArea(media);
+              if (area === 0) {
+                await pressReaderShortcut(
+                  page,
+                  writingMode === 'Vertical' ? 'ArrowLeft' : 'ArrowRight'
+                );
+              }
+              return area;
+            })
+            .toBeGreaterThan(0);
+          await expect
+            .poll(() => clippedMediaOverflow(media))
+            .toEqual({
+              bottom: 0,
+              left: 0,
+              right: 0,
+              top: 0
+            });
+        }
+
+        if (writingMode === 'Vertical' && viewport.width === 1_280) {
+          // The images and preceding text fit together and should remain on the same page.
+          expect(await visibleMediaArea(first)).toBeGreaterThan(0);
+          expect(
+            await visibleMediaArea(page.locator('#preceding-consecutive-text'))
+          ).toBeGreaterThan(0);
+        }
+      });
+    }
+  }
 }
 
 async function expectBookContentWidth(page: Page, width: number) {

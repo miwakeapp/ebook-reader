@@ -189,6 +189,21 @@ await writeOut(
   <p id="following-svg-text">Following text must not be covered by the SVG illustration.</p>`
       },
       {
+        title: 'Consecutive illustrations',
+        bodyHTML: `
+  <p id="preceding-consecutive-text">Text before the illustrations.</p>
+  <div style="margin-left: 1.05em"><img
+    src="images/portrait-illustration.bmp"
+    alt="First consecutive illustration"
+    style="width: 28.125em; height: 37.3125em"
+  /><img
+    src="images/portrait-illustration.bmp"
+    alt="Second consecutive illustration"
+    style="width: 28.125em; height: 50.4375em"
+  /></div>
+  <p id="following-consecutive-text">Following text must not overlap either illustration.</p>`
+      },
+      {
         title: 'Nested fixed-layout illustration',
         includeHeading: false,
         bodyHTML: `
