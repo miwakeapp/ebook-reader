@@ -11,7 +11,9 @@ const config = {
       fallback: '404.html'
     }),
     paths: {
-      base: env.VITE_PAGE_PATH || ''
+      base: env.VITE_PAGE_PATH || '',
+      // Registration runs on `load`, after a client-side redirect may change the document URL.
+      relative: false
     }
   }
 };
