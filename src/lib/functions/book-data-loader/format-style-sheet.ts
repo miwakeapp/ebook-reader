@@ -16,9 +16,7 @@ export default function formatStyleSheet(bookData: BooksDbBookData, parentSelect
   newRules.forEach((rule) => {
     const newDeclarations: Record<string, string> = {};
 
-    rule.declarations = rule.declarations.filter(
-      (d) => !/line-height$/.test(d.property) && !/text-indent$/.test(d.property)
-    );
+    rule.declarations = rule.declarations.filter((d) => !/line-height$/.test(d.property));
 
     const lineBreakFormatter = new LineBreakFormatter(rule.declarations, newDeclarations);
 

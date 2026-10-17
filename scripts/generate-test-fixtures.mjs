@@ -236,6 +236,37 @@ await writeOut(
 );
 
 await writeOut(
+  'paragraph-indent-book.epub',
+  await buildEPUB({
+    title: 'Paragraph indent book',
+    author: 'Test Author',
+    identifier: 'urn:uuid:00000000-0000-4000-8000-000000000007',
+    language: 'ja',
+    styleSheet: `
+.title-page { text-indent: -4.286em; }
+.title-container { display: inline-block; height: 100%; }
+.chapter-title { font-size: 1.4em; margin: 2em 0 0; padding-top: 6em; }
+.indented { text-indent: 2em; }
+.flush { text-indent: 0; }
+.important-indent { text-indent: 3em !important; }
+`,
+    chapters: [
+      {
+        title: 'Chapter title',
+        includeHeading: false,
+        bodyHTML: `
+  <div class="title-page">
+    <div class="title-container"><p class="chapter-title">第六章\u3000文字の大きさと行の長さ</p></div>
+  </div>
+  <p class="indented">書籍の字下げを使う段落。</p>
+  <p class="flush">字下げのない段落。</p>
+  <p class="important-indent">書籍が優先する字下げ。</p>`
+      }
+    ]
+  })
+);
+
+await writeOut(
   'plain-text-book.txt',
   enc.encode(`This plain text fixture gives the library another real imported book.
 
@@ -267,7 +298,16 @@ async function buildIncompleteEPUB() {
   return writer.getData();
 }
 
-async function buildEPUB({ title, author, identifier, language, chapters, coverColor, images }) {
+async function buildEPUB({
+  title,
+  author,
+  identifier,
+  language,
+  chapters,
+  coverColor,
+  images,
+  styleSheet
+}) {
   const writer = new Uint8ArrayWriter();
   const zip = new ZipWriter(writer);
 
@@ -283,10 +323,13 @@ async function buildEPUB({ title, author, identifier, language, chapters, coverC
   await zip.add(
     'OEBPS/content.opf',
     new TextReader(
-      packageOPF({ title, author, identifier, language, chapters, coverColor, images })
+      packageOPF({ title, author, identifier, language, chapters, coverColor, images, styleSheet })
     )
   );
   await zip.add('OEBPS/nav.xhtml', new TextReader(navXHTML({ title, chapters })));
+  if (styleSheet) {
+    await zip.add('OEBPS/stylesheet.css', new TextReader(styleSheet));
+  }
   if (coverColor) {
     await zip.add('OEBPS/cover.bmp', new Uint8ArrayReader(coverBitmapBytes(coverColor)));
   }
@@ -296,7 +339,10 @@ async function buildEPUB({ title, author, identifier, language, chapters, coverC
 
   for (let i = 0; i < chapters.length; i++) {
     const c = chapters[i];
-    await zip.add(`OEBPS/chapter${i + 1}.xhtml`, new TextReader(chapterXHTML(c, language)));
+    await zip.add(
+      `OEBPS/chapter${i + 1}.xhtml`,
+      new TextReader(chapterXHTML(c, language, !!styleSheet))
+    );
   }
 
   await zip.close();
@@ -313,7 +359,16 @@ function containerXML() {
 `;
 }
 
-function packageOPF({ title, author, identifier, language, chapters, coverColor, images }) {
+function packageOPF({
+  title,
+  author,
+  identifier,
+  language,
+  chapters,
+  coverColor,
+  images,
+  styleSheet
+}) {
   const manifestItems = chapters
     .map(
       (_c, i) =>
@@ -340,6 +395,7 @@ function packageOPF({ title, author, identifier, language, chapters, coverColor,
   </metadata>
   <manifest>
     <item id="nav" href="nav.xhtml" media-type="application/xhtml+xml" properties="nav"/>
+${styleSheet ? '    <item id="stylesheet" href="stylesheet.css" media-type="text/css"/>' : ''}
 ${manifestItems}${coverItem}${imageItems ? `\n${imageItems}` : ''}
   </manifest>
   <spine>
@@ -369,7 +425,7 @@ ${items}
 `;
 }
 
-function chapterXHTML(chapter, language) {
+function chapterXHTML(chapter, language, hasStyleSheet) {
   const bodyContent = chapter.bodyHTML ?? `  <p>${escapeXML(chapter.body)}</p>`;
   const heading =
     chapter.includeHeading === false ? '' : `  <h1>${escapeXML(chapter.title)}</h1>\n`;
@@ -377,7 +433,7 @@ function chapterXHTML(chapter, language) {
   return `<?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE html>
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="${escapeXML(language)}" lang="${escapeXML(language)}">
-<head><title>${escapeXML(chapter.title)}</title></head>
+<head><title>${escapeXML(chapter.title)}</title>${hasStyleSheet ? '<link rel="stylesheet" href="stylesheet.css"/>' : ''}</head>
 <body>
 ${heading}${bodyContent}
 </body>

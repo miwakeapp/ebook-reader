@@ -3,6 +3,7 @@ import { BlurMode } from '$lib/data/blur-mode';
 import { defaultFonts } from '$lib/data/fonts';
 import { FuriganaStyle } from '$lib/data/furigana-style';
 import { ImportHTMLFixMode } from '$lib/data/import-html-fix-mode';
+import type { TextIndentationMode } from '$lib/data/text-indentation-mode';
 import type { TextMarginMode } from '$lib/data/text-margin-mode';
 import type { VerticalTextOrientation } from '$lib/data/vertical-text-orientation';
 import { ViewMode } from '$lib/data/view-mode';
@@ -21,6 +22,7 @@ export const appearanceSettingsDefaults = {
   fontFamilyGroupTwo: defaultFonts['sans-serif'],
   fontSize: 20,
   lineHeight: 1.65,
+  textIndentationMode: 'auto' as TextIndentationMode,
   textIndentation: 0,
   textMarginMode: 'auto' as TextMarginMode,
   textMarginValue: 0,

@@ -50,8 +50,10 @@
   }
 
   &:not(.ttu-apply-important) {
-    p {
-      text-indent: var(--book-content-text-intendation, 0rem);
+    &.ttu-indentation-manual {
+      p {
+        text-indent: var(--book-content-text-intendation, 0rem);
+      }
     }
 
     &.ttu-apply-justification {
@@ -74,8 +76,10 @@
   }
 
   &.ttu-apply-important {
-    p {
-      text-indent: var(--book-content-text-intendation, 0rem) !important;
+    &.ttu-indentation-manual {
+      p {
+        text-indent: var(--book-content-text-intendation, 0rem) !important;
+      }
     }
 
     &.book-content--writing-vertical-rl.ttu-margin-manual {

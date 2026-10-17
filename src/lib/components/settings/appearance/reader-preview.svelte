@@ -11,6 +11,7 @@
     furiganaStyle$,
     lineHeight$,
     prioritizeReaderStyles$,
+    textIndentationMode$,
     textIndentation$,
     textMarginMode$,
     textMarginValue$,
@@ -85,6 +86,7 @@
       class:book-content--furigana-style-toggle={$furiganaStyle$ === FuriganaStyle.Toggle}
       class:ttu-apply-important={$prioritizeReaderStyles$}
       class:ttu-apply-justification={$enableTextJustification$}
+      class:ttu-indentation-manual={$textIndentationMode$ === 'manual'}
       class:ttu-margin-manual={$textMarginMode$ === 'manual'}
       class:ttu-text-wrap-pretty={$enableTextWrapPretty$}
       bind:this={previewText}
@@ -107,7 +109,7 @@
           >読む<rt>よむ</rt></ruby
         >。
       </p>
-      <p>
+      <p class="indented">
         段落が続くと、<ruby>余白<rt>よはく</rt></ruby>のリズムも見えてくる。
       </p>
       <p style:margin-block="1.25rem" style:text-align="start" style:text-indent="2.5rem">
@@ -194,6 +196,10 @@
 
   .combined-digits {
     text-combine-upright: all;
+  }
+
+  .indented {
+    text-indent: 1em;
   }
 
   .illustration {
