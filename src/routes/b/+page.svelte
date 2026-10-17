@@ -29,6 +29,7 @@
     showFooterChapterCharacterCounter$,
     showFooterChapterPercentage$,
     textIndentation$,
+    textIndentationMode$,
     textMarginMode$,
     textMarginValue$,
     theme$,
@@ -1393,6 +1394,7 @@
     fontSize={$fontSize$}
     lineHeight={$lineHeight$}
     textIndentation={$textIndentation$}
+    textIndentationMode={$textIndentationMode$}
     textMarginMode={$textMarginMode$}
     textMarginValue={$textMarginValue$}
     hideSpoilerImage={$blurImageMode$ !== BlurMode.OFF}

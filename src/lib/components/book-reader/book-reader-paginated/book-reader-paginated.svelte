@@ -8,6 +8,7 @@
   import { logger } from '$lib/data/logger';
   import { appShortcuts } from '$lib/data/app-shortcuts.svelte';
   import type { TextMarginMode } from '$lib/data/text-margin-mode';
+  import type { TextIndentationMode } from '$lib/data/text-indentation-mode';
   import {
     firstDimensionMargin$,
     selectionToBookmarkEnabled$,
@@ -45,6 +46,7 @@
     fontSize: number;
     lineHeight: number;
     textIndentation: number;
+    textIndentationMode: TextIndentationMode;
     textMarginMode: TextMarginMode;
     textMarginValue: number;
     hideSpoilerImage: boolean;
@@ -85,6 +87,7 @@
     fontSize,
     lineHeight,
     textIndentation,
+    textIndentationMode,
     textMarginMode,
     textMarginValue,
     hideSpoilerImage,
@@ -170,6 +173,8 @@
       columnCount,
       fontSize,
       lineHeight,
+      textIndentationMode,
+      textIndentation,
       textMarginMode,
       textMarginValue,
       prioritizeReaderStyles
@@ -772,6 +777,7 @@
   class:book-content--furigana-style-toggle={furiganaStyle === FuriganaStyle.Toggle}
   class:ttu-apply-important={prioritizeReaderStyles}
   class:ttu-apply-justification={enableTextJustification}
+  class:ttu-indentation-manual={textIndentationMode === 'manual'}
   class:ttu-margin-manual={textMarginMode === 'manual'}
   class:ttu-text-wrap-pretty={enableTextWrapPretty}
   class="book-content m-auto"

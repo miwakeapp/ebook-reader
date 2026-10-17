@@ -3,6 +3,7 @@
   import { pxReader } from '$lib/components/book-reader/css-classes';
   import type { BooksDbBookmarkData } from '$lib/data/database/books-db/versions/books-db';
   import { FuriganaStyle } from '$lib/data/furigana-style';
+  import type { TextIndentationMode } from '$lib/data/text-indentation-mode';
   import type { TextMarginMode } from '$lib/data/text-margin-mode';
   import { ViewMode } from '$lib/data/view-mode';
   import { convertRemToPixels } from '$lib/functions/utils';
@@ -33,6 +34,7 @@
     enableTextJustification: boolean;
     enableTextWrapPretty: boolean;
     textIndentation: number;
+    textIndentationMode: TextIndentationMode;
     textMarginMode: TextMarginMode;
     textMarginValue: number;
     fontColor: string;
@@ -80,6 +82,7 @@
     enableTextJustification,
     enableTextWrapPretty,
     textIndentation,
+    textIndentationMode,
     textMarginMode,
     textMarginValue,
     fontColor,
@@ -312,6 +315,7 @@
       {fontSize}
       {lineHeight}
       {textIndentation}
+      {textIndentationMode}
       {textMarginMode}
       {textMarginValue}
       {hideSpoilerImage}
@@ -353,6 +357,7 @@
       {fontSize}
       {lineHeight}
       {textIndentation}
+      {textIndentationMode}
       {textMarginMode}
       {textMarginValue}
       {hideSpoilerImage}

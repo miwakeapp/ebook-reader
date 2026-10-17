@@ -20,6 +20,7 @@ export const EDITION_TITLE_BOOK = 'edition-title-book';
 export const LONG_BOOK = 'long-book';
 export const LONG_BOOK_CHAPTER_CHARACTERS = 7519;
 export const MEDIA_SIZING_BOOK = 'media-sizing-book';
+export const PARAGRAPH_INDENT_BOOK = 'paragraph-indent-book';
 export const PLAIN_TEXT_BOOK = 'plain-text-book';
 export const SPOILER_IMAGE_GALLERY_BOOK = 'spoiler-image-gallery-book';
 export const VALID_BOOK = 'valid-book';
@@ -31,6 +32,7 @@ export type LibraryBookFixture =
   | typeof VALID_BOOK
   | typeof LONG_BOOK
   | typeof MEDIA_SIZING_BOOK
+  | typeof PARAGRAPH_INDENT_BOOK
   | typeof SPOILER_IMAGE_GALLERY_BOOK
   | typeof PLAIN_TEXT_BOOK;
 export type InvalidImportBookFixture = typeof NOT_A_ZIP_BOOK | typeof NOT_AN_EPUB_BOOK;
@@ -138,6 +140,14 @@ const fixtureMetadata = new Map<BookFixture, BookFixtureMetadata>([
       title: 'Media sizing book',
       path: resolve(fixtureRoot, 'media-sizing-book.epub'),
       readerText: 'This chapter exercises oversized media and an inline glyph'
+    }
+  ],
+  [
+    PARAGRAPH_INDENT_BOOK,
+    {
+      title: 'Paragraph indent book',
+      path: resolve(fixtureRoot, 'paragraph-indent-book.epub'),
+      readerText: '第六章　文字の大きさと行の長さ'
     }
   ],
   [

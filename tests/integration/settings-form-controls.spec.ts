@@ -107,19 +107,78 @@ test('visible number-setting labels focus and describe their inputs', async ({ p
   await expect(lineHeight).toBeFocused();
   await expect(lineHeight).toHaveAccessibleDescription('× text size');
 
-  const indentation = page.getByRole('spinbutton', { name: 'First-line indent', exact: true });
+  const indentation = page.getByRole('spinbutton', { name: 'Paragraph indent', exact: true });
+  await expect(indentation).toBeDisabled();
   await page
-    .getByText('Extra indentation at the start of each paragraph.', { exact: true })
+    .getByRole('group', { name: 'Paragraph indentation source' })
+    .getByText('Custom', { exact: true })
+    .click();
+  await page
+    .getByText('Custom sets the first-line indentation of each paragraph.', { exact: true })
     .click();
   await expect(indentation).toBeFocused();
   await expect(indentation).toHaveAccessibleDescription(
-    'Extra indentation at the start of each paragraph. rem'
+    'Custom sets the first-line indentation of each paragraph. rem'
   );
 
   await navigateToSettingsReading(page);
   await expect(page.getByRole('group', { name: 'Text columns' })).toHaveAccessibleDescription(
     'Auto adds columns as needed to keep each one roughly 1,000 px wide or less. Applies only when text direction is set to Horizontal and reading flow is set to Pages.'
   );
+});
+
+test('paragraph indentation defaults to Book and remembers Custom settings', async ({ page }) => {
+  await navigateToSettingsAppearance(page);
+
+  const source = page.getByRole('group', { name: 'Paragraph indentation source' });
+  const indentation = page.getByRole('spinbutton', { name: 'Paragraph indent', exact: true });
+  const previewParagraph = page
+    .getByLabel('Live reader preview')
+    .locator('.preview-text > p')
+    .first();
+  const publisherParagraph = page.getByText('【書籍指定】', { exact: true });
+  const indentedParagraph = page
+    .getByLabel('Live reader preview')
+    .locator('p')
+    .filter({ hasText: '段落が続くと、' });
+
+  await expect(source.getByLabel('Book')).toBeChecked();
+  await expect(indentation).toBeDisabled();
+  await expect(indentedParagraph).toHaveCSS('text-indent', '20px');
+  await expect(publisherParagraph).toHaveCSS('text-indent', '40px');
+
+  await source.getByText('Custom', { exact: true }).click();
+  await expect(indentation).toHaveValue('0');
+  await expect(indentedParagraph).toHaveCSS('text-indent', '0px');
+  await source.getByText('Book', { exact: true }).click();
+  await expect(indentedParagraph).toHaveCSS('text-indent', '20px');
+
+  await source.getByText('Custom', { exact: true }).click();
+  await indentation.fill('2');
+  await expect(previewParagraph).toHaveCSS('text-indent', '32px');
+  await expect(publisherParagraph).toHaveCSS('text-indent', '40px');
+  await page.reload();
+  await expect(source.getByLabel('Custom')).toBeChecked();
+  await expect(indentation).toHaveValue('2');
+  await expect(previewParagraph).toHaveCSS('text-indent', '32px');
+
+  await page.locator('summary').getByText('Advanced', { exact: true }).click();
+  await page.getByText('Prioritize reader paragraph formatting', { exact: true }).click();
+  await expect(publisherParagraph).toHaveCSS('text-indent', '32px');
+
+  await source.getByText('Book', { exact: true }).click();
+  await expect(indentation).toBeDisabled();
+  await expect(previewParagraph).toHaveCSS('text-indent', '0px');
+  await expect(publisherParagraph).toHaveCSS('text-indent', '40px');
+  await page.reload();
+  await expect(source.getByLabel('Book')).toBeChecked();
+  await expect(indentation).toHaveValue('2');
+  await expect(indentation).toBeDisabled();
+
+  await source.getByText('Custom', { exact: true }).click();
+  await expect(previewParagraph).toHaveCSS('text-indent', '32px');
+  await indentation.fill('0');
+  await expect(publisherParagraph).toHaveCSS('text-indent', '0px');
 });
 
 test('number inputs keep incomplete and out-of-range edits out of settings stores', async ({
@@ -190,6 +249,11 @@ test('restores appearance defaults without deleting custom resources', async ({ 
   await page.getByRole('group', { name: 'Text direction' }).getByText('Horizontal').click();
   await page.getByRole('group', { name: 'Reading flow' }).getByText('Scroll').click();
   await page.getByRole('spinbutton', { name: 'Text size', exact: true }).fill('48');
+  await page
+    .getByRole('group', { name: 'Paragraph indentation source' })
+    .getByText('Custom', { exact: true })
+    .click();
+  await page.getByRole('spinbutton', { name: 'Paragraph indent', exact: true }).fill('2');
 
   await expect(page.getByText('Restore appearance defaults', { exact: true })).toBeVisible();
   await page.getByRole('button', { name: 'Restore defaults…' }).click();
@@ -207,6 +271,12 @@ test('restores appearance defaults without deleting custom resources', async ({ 
     page.getByRole('group', { name: 'Reading flow' }).getByRole('radio', { name: 'Pages' })
   ).toBeChecked();
   await expect(page.getByRole('spinbutton', { name: 'Text size', exact: true })).toHaveValue('20');
+  await expect(
+    page.getByRole('group', { name: 'Paragraph indentation source' }).getByLabel('Book')
+  ).toBeChecked();
+  await expect(
+    page.getByRole('spinbutton', { name: 'Paragraph indent', exact: true })
+  ).toBeDisabled();
   await expect
     .poll(() => page.evaluate(() => localStorage.getItem('customThemes')))
     .toBe(JSON.stringify({ preserved: {} }));
@@ -220,6 +290,7 @@ test('restores appearance defaults without deleting custom resources', async ({ 
     fontSize: '20',
     lineHeight: '1.65',
     textIndentation: '0',
+    textIndentationMode: 'auto',
     textMarginMode: 'auto',
     textMarginValue: '0',
     enableTextJustification: '0',

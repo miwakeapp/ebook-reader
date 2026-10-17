@@ -46,6 +46,7 @@ import {
   stringLocalStorageStore
 } from './internal/persistent-local-storage-store';
 import { localStorage as appLocalStorage } from './window/local-storage';
+import type { TextIndentationMode } from './text-indentation-mode';
 import type { TextMarginMode } from './text-margin-mode';
 import type { ThemeOption } from './theme-option';
 import type { VerticalTextOrientation } from './vertical-text-orientation';
@@ -75,6 +76,10 @@ export const fontSize$ = numberLocalStorageStore('fontSize', appearanceSettingsD
 export const lineHeight$ = numberLocalStorageStore(
   'lineHeight',
   appearanceSettingsDefaults.lineHeight
+);
+export const textIndentationMode$ = stringLocalStorageStore<TextIndentationMode>(
+  'textIndentationMode',
+  appearanceSettingsDefaults.textIndentationMode
 );
 export const textIndentation$ = numberLocalStorageStore(
   'textIndentation',

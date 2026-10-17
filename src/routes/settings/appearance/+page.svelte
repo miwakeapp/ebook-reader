@@ -32,6 +32,7 @@
     lineHeight$,
     prioritizeReaderStyles$,
     simplifyBookTitles$,
+    textIndentationMode$,
     textIndentation$,
     textMarginMode$,
     textMarginValue$,
@@ -57,7 +58,7 @@
     }
   ];
 
-  const paragraphSpacingOptions = [
+  const paragraphSourceOptions = [
     { id: 'auto' as const, label: 'Book' },
     { id: 'manual' as const, label: 'Custom' }
   ];
@@ -144,6 +145,7 @@
     $fontFamilyGroupTwo$ = appearanceSettingsDefaults.fontFamilyGroupTwo;
     $fontSize$ = appearanceSettingsDefaults.fontSize;
     $lineHeight$ = appearanceSettingsDefaults.lineHeight;
+    $textIndentationMode$ = appearanceSettingsDefaults.textIndentationMode;
     $textIndentation$ = appearanceSettingsDefaults.textIndentation;
     $textMarginMode$ = appearanceSettingsDefaults.textMarginMode;
     $textMarginValue$ = appearanceSettingsDefaults.textMarginValue;
@@ -214,15 +216,32 @@
       step={appearanceSettingsLimits.lineHeight.step}
     />
 
-    <SettingsNumberItem
-      label="First-line indent"
-      description="Extra indentation at the start of each paragraph."
-      bind:value={$textIndentation$}
-      unit="rem"
-      min={appearanceSettingsLimits.textIndentation.minimum}
-      max={appearanceSettingsLimits.textIndentation.maximum}
-      step={appearanceSettingsLimits.textIndentation.step}
-    />
+    <SettingsItem
+      label="Paragraph indent"
+      description="Custom sets the first-line indentation of each paragraph."
+      controlId="appearance-paragraph-indent"
+    >
+      {#snippet control({ labelledBy, describedBy })}
+        <div class="compound-control">
+          <SettingsSegmentedControl
+            label="Paragraph indentation source"
+            options={paragraphSourceOptions}
+            bind:value={$textIndentationMode$}
+          />
+          <SettingsNumberInput
+            id="appearance-paragraph-indent"
+            bind:value={$textIndentation$}
+            unit="rem"
+            {labelledBy}
+            {describedBy}
+            min={appearanceSettingsLimits.textIndentation.minimum}
+            max={appearanceSettingsLimits.textIndentation.maximum}
+            step={appearanceSettingsLimits.textIndentation.step}
+            disabled={$textIndentationMode$ === 'auto'}
+          />
+        </div>
+      {/snippet}
+    </SettingsItem>
 
     <SettingsItem
       label="Paragraph gap"
@@ -233,7 +252,7 @@
         <div class="compound-control">
           <SettingsSegmentedControl
             label="Paragraph spacing source"
-            options={paragraphSpacingOptions}
+            options={paragraphSourceOptions}
             bind:value={$textMarginMode$}
           />
           <SettingsNumberInput
@@ -286,7 +305,7 @@
   >
     <SettingsSwitchItem
       label="Prioritize reader paragraph formatting"
-      description="Makes your paragraph gap, first-line indent, alignment, and improved line breaks override conflicting styles in the book."
+      description="Makes your custom paragraph gap and indent, alignment, and improved line breaks override conflicting styles in the book."
       bind:checked={$prioritizeReaderStyles$}
     />
 
